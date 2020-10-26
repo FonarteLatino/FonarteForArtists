@@ -3,7 +3,49 @@ const express = require('express');
 const data = require('../modulos/extraccion_de_datos');
 const app = express();
 
-const { Connection, Request } = require("tedious");
+//const { Connection, Request } = require("tedious");
+
+const SqlConnection = require("tedious").Connection;
+const Request = require("tedious").Request;
+const config = {
+    authentication: {
+      options: {
+        userName: "Dataguys2", // update me
+        password: "Fonarte2018" // update me
+      },
+      type: "default"
+    },
+    server: "fonarte2.database.windows.net", // update me
+    options: {
+      database: "Reporteador", //update me
+      encrypt: true
+    }
+  };
+/*function executeQuery(query) {
+        let resultEntity = {
+            result: {},
+            error: null
+        };
+
+        return new Promise((resolve, reject) => {
+            var connection = new SqlConnection(config);
+
+            connection.on('connect', function (err) {
+                let request = new Request(query, function (err, rowCount, rows) {
+                    if (err) {
+                        resultEntity.error = err; 
+                        reject(resultEntity);
+                    } else {
+                        resultEntity.result = rows;
+                        resolve(resultEntity);
+                    }
+
+                    connection.close();
+                });
+                connection.execSql(request);
+            });
+        });
+};*/
 
 // Create connection to database
 const config = {
@@ -20,11 +62,9 @@ const config = {
     encrypt: true
   }
 };
-//SELECT DISTINCT [Retailer] FROM [dbo].[000_Client_Dashboard_Total] where ([UPC] = '7509841275835' or [UPC] = '7509841277167') and [Year_Month] = '2020-8'
-  //SELECT DISTINCT [Country_Sale] FROM [dbo].[000_Client_Dashboard_Total] where [ISRC] = 'MXF602000184' and [Year_Month] = '2020-8' and [Retailer]='Spotify'
-  //SELECT SUM (Net_Royalty_Total) as RegaliasTotales FROM [dbo].[000_Client_Dashboard_Total] where [ISRC] = 'MXF602000184' and [Year_Month] = '2020-8' and [Retailer]='Spotify' and [Country_Sale] = 'Mexico'
 
 var requ = (req)=>{
+    var r='si';
     const connection = new Connection(config);
     connection.on("connect", err => {
         if (err) {
@@ -44,8 +84,10 @@ var requ = (req)=>{
         (err, rowCount) => {
         if (err) {
             console.error(err.message);
+            connection.close();
         } else {
             console.log(`${rowCount} row(s) returned`);
+            connection.close();
         }
         }
     );
@@ -54,10 +96,13 @@ var requ = (req)=>{
         columns.forEach(column => {
         console.log("%s\t%s", column.metadata.colName, column.value);
         });
+        r=columns; 
     });
 
     connection.execSql(request);
     }
+    
+    
 };
 
 app.get('/artista/:artista',(req,res)=>{
@@ -66,7 +111,8 @@ app.get('/artista/:artista',(req,res)=>{
     
     let q = `SELECT DISTINCT [ARTIST],[UPC] FROM [dbo].[BBDD_FINAL_CANCIONES] WHERE [ARTIST] = \'${artista}\'`;
     console.log(q);
-    requ(q);
+    let resu = executeQuery(q);
+    console.log(resu); 
     res.send(`Regresa los upc correspondientes a ${artista}`);
     //res.send(q);
 });
@@ -110,13 +156,25 @@ app.get('/plataforma/fecha/:fecha/upc/', (req, res, next) => {
     console.log(req.query);
     let fecha = req.params.fecha;
     let upc = req.query.upc;
+    let q='SELECT DISTINCT [Retailer] FROM [dbo].[000_Client_Dashboard_Total] where (';
+    let c=0;
     upc.forEach(element => {
-       let  
+        c=c+1;
+        
+        q = q+`[UPC] = '${element}`;
+        //console.log(element)
+        
+        if(c<upc.length)
+        {
+            q = q+'\' or ';
+        }
+        console.log(q);
     });
     //let q = `SELECT DISTINCT [Retailer] FROM [dbo].[000_Client_Dashboard_Total] where ([UPC] = '7509841275835' or [UPC] = '7509841277167') and [Year_Month] = '2020-8'`;
-    //console.log(q);
-    //requ(q);
-    res.send(`regresa las plataformas de la fecha ${fecha} para los discos ${upc}`);
+    q = q+`\') and [Year_Month] = \'${fecha}\'`;
+    console.log(q); 
+    requ(q);
+    res.send(`regresa las plataformas de la fecha ${fecha} para los discos ${upc}`); 
 });
 
 app.get('/pais/fecha/:fecha/plataforma/:plataforma/isrc/:isrc', (req, res) => {
@@ -124,6 +182,9 @@ app.get('/pais/fecha/:fecha/plataforma/:plataforma/isrc/:isrc', (req, res) => {
     let isrc = req.params.isrc;
     let fecha = req.params.fecha;
     let plataforma = req.params.plataforma;
+    let q = `SELECT DISTINCT [Country_Sale] FROM [dbo].[000_Client_Dashboard_Total] where [ISRC] = \'${isrc}\' and [Year_Month] = \'${fecha}\' and [Retailer]=\'${plataforma}\'`;
+    console.log(q);
+    requ(q);
     res.send(`regresa lista de paises para el track ${isrc} en la plataforma ${plataforma} en la fecha ${fecha}`);
 });
 
@@ -133,6 +194,9 @@ app.get('/resumen/pais/:pais/fecha/:fecha/plataforma/:plataforma/isrc/:isrc', (r
     let fecha = req.params.fecha;
     let plataforma = req.params.plataforma;
     let pais = req.params.pais;
+    let q = `SELECT SUM (Net_Royalty_Total) as RegaliasTotales, SUM (Quantity) as TotaldeClics FROM [dbo].[000_Client_Dashboard_Total] where [ISRC] = \'${isrc}\' and [Year_Month] = \'${fecha}\' and [Retailer]=\'${plataforma}\' and [Country_Sale] = \'${pais}\'`
+    console.log(q);
+    requ(q);
     res.send(`regresa suma de regalias, suma de clicks y promedio por click para el track ${isrc} en la plataforma ${plataforma} en la fecha ${fecha} y en el pais ${pais}`);
 });
 
