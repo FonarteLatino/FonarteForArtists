@@ -4,7 +4,7 @@ const sql = require('mssql');
 async function artistas(){
     try{
         let pool = await sql.connect(config);
-        let products = await pool.request().query("SELECT DISTINCT [ARTIST],[UPC] FROM [dbo].[BBDD_FINAL_CANCIONES]")
+        let products = await pool.request().query("SELECT DISTINCT [ARTIST] FROM [dbo].[BBDD_FINAL_CANCIONES]")
         return products.recordsets;
     }
     catch(error){
@@ -66,12 +66,14 @@ async function upc(upc){
 
 
 async function plataformaFecha(upc,fecha){
-    let fecha = fecha;
-    let upc = upc;
+    
+    let up = upc;
+    console.log(up);
+    console.log(fecha);
     let q = "SELECT DISTINCT [Retailer] FROM [dbo].[000_Client_Dashboard_Total] where (";
     console.log(q);
     let c=0;
-    upc.forEach(element => {
+    up.forEach(element => {
         c=c+1;
         
         q = q+`[UPC] = '${element}`;

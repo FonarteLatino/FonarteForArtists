@@ -1,0 +1,24 @@
+{
+  "name": "Api2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon api.js"
+  },
+  "dependencies": {
+    "body-parsec": "3.0.0",
+    "cors": "2.8.5",
+    "express": "4.17.1",
+    "https": "^1.0.0",
+    "mssql": "6.3.1",
+    "mysql": "2.18.1"
+  },
+  "devDependencies": {
+    "nodemon": "2.0.7"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

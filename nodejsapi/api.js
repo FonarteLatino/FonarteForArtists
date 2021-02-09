@@ -58,9 +58,10 @@ router.route('/upc/:upc').get((request,response)=>{
     })
 })
 
-router.route('/plataforma/fecha/:fecha/:upc/').get((request,response)=>{
-
-    dboperations.plataformaFecha(request.params.upc,request.params.fecha).then(result => {
+router.route('/plataforma/fecha/:fecha/upc/').get((request,response)=>{
+    console.log(request.params);
+    console.log(request.query);
+    dboperations.plataformaFecha(request.query.upc,request.params.fecha).then(result => {
         //console.log(result);
         response.json(result[0]);
     })
@@ -74,7 +75,7 @@ router.route('/pais/fecha/:fecha/plataforma/:plataforma/isrc/:isrc').get((reques
     })
 })
 
-router.route('/upc/:upc/resumen/pais/:pais/fecha/:fecha/plataforma/:plataforma/isrc/:isrc').get((request,response)=>{
+router.route('/resumen/pais/:pais/fecha/:fecha/plataforma/:plataforma/isrc/:isrc').get((request,response)=>{
 
     dboperations.resumen(request.params.isrc,request.params.fecha,request.params.plataforma,request.params.pais).then(result => {
         //console.log(result);
@@ -86,7 +87,7 @@ router.route('/upc/:upc/resumen/pais/:pais/fecha/:fecha/plataforma/:plataforma/i
 var port = process.env.PORT ||8090;
 app.listen(port);
 console.log('Order API is rinning at '+ port);
-
-dboperations.get().then(result => {
+ 
+dboperations.artistas().then(result => {
     console.log(result);
 })

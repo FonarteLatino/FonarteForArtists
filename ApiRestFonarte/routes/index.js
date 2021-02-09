@@ -153,7 +153,7 @@ app.get('/upc/:upc', (req, res) => {
 
 app.get('/plataforma/fecha/:fecha/upc/', (req, res, next) => {
     console.log(req.params);
-    console.log(req.query);
+    console.log(req.query); 
     let fecha = req.params.fecha;
     let upc = req.query.upc;
     let q='SELECT DISTINCT [Retailer] FROM [dbo].[000_Client_Dashboard_Total] where (';
