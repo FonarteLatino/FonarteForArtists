@@ -1,8 +1,10 @@
 const mysql = require('mysql');
 
+const {promisify} = require('util');
+
 const database = require('./dbconfig');
 
-const pool = mysql.createPool(database);
+const pool = mysql.createPool(database.configMysql);
 
 pool.getConnection((err,connection) => {
     if (err) {
@@ -16,4 +18,12 @@ pool.getConnection((err,connection) => {
             console.error('Coneccion rechasada');
         }
     }
+
+    else if(connection) connection.release();
+    console.log('DB conectado');
+    return;
 });
+
+pool.query = promisify(pool.query);
+
+module.exports = pool;

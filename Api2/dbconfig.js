@@ -14,7 +14,7 @@ const configMysql = {
     host : 'localhost',
     user: 'root',
     password: '',
-    database: "resumen_regalias",
+    database: "resumen_regalias"
 };
 
 module.exports = {

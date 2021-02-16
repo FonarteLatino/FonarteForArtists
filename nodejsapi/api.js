@@ -26,6 +26,22 @@ router.route('/artistas').get((request,response)=>{
     })
 })
 
+router.route('/discos').get((request,response)=>{
+
+    dboperations.discos().then(result => {
+        //console.log(result);
+        response.json(result[0]);
+    })
+})
+
+/*router.route('/canciones').get((request,response)=>{
+
+    dboperations.canciones().then(result => {
+        //console.log(result);
+        response.json(result[0]);
+    })
+})*/
+
 router.route('/artista/:artists').get((request,response)=>{
 
     dboperations.artista(request.params.artists).then(result => {
