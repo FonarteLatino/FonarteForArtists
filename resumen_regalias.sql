@@ -43,7 +43,7 @@ CREATE TABLE `artista` (
 
 CREATE TABLE `cancion` (
   `ISRC` varchar(500) NOT NULL,
-  `disco_UPC` int(100) NOT NULL,
+  `disco_UPC` bigint(100) NOT NULL,
   `nombre` varchar(500) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -54,7 +54,7 @@ CREATE TABLE `cancion` (
 --
 
 CREATE TABLE `disco` (
-  `UPC` int(100) NOT NULL,
+  `UPC` bigint(100) NOT NULL,
   `artista_id` int(11) NOT NULL,
   `nombre` varchar(500) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -101,7 +101,7 @@ ALTER TABLE `artista`
 -- Indices de la tabla `cancion`
 --
 ALTER TABLE `cancion`
-  ADD PRIMARY KEY (`ISRC`),
+  ADD PRIMARY KEY (`ISRC`,`disco_UPC`),
   ADD KEY `fk_CANCION_DISCO` (`disco_UPC`);
 
 --

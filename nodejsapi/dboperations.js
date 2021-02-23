@@ -51,6 +51,19 @@ async function discos(){
     }
 }
 
+async function canciones(){
+    let q = "SELECT DISTINCT [UPC],[ISRC],[TRACK_NAME] FROM [dbo].[BBDD_FINAL_CANCIONES]";
+    console.log(q);
+    try {
+        let pool = await sql.connect(config);
+        let product = await pool.request().query(q);
+        return product.recordsets;
+    }
+    catch (error) {
+        console.log(error);
+    }
+}
+
 async function discoUpc(disco,upc){
     let q = "SELECT DISTINCT [UPC],[ARTIST],[ALBUM_NAME],[ISRC],[TRACK_NAME] FROM [dbo].[BBDD_FINAL_CANCIONES] where [ALBUM_NAME] = \'"+disco+"\' or [UPC] = \'"+upc+"\'";
     console.log(q);
@@ -139,6 +152,7 @@ async function resumen(isrc,fecha,plataforma,pais){
 module.exports = {
     artistas : artistas,
     discos : discos,
+    canciones : canciones,
     artista : artista,
     disco : disco,
     discoUpc : discoUpc,
