@@ -54,6 +54,108 @@ router.route('/artists/inicial').get(async (request,response)=>{
    
 })
 
+router.route('/artists/actualizar').get(async (request,response)=>{
+    let respuesta;
+    await axios({
+        method: 'GET',
+        url: 'http://localhost:8090/api/artistas'
+    }).then(res=>{
+        respuesta = res.data;    
+    }).catch(err => console.log(err))
+    
+    //console.log(respuesta.length);
+    console.log(respuesta);
+    let a = 'SELECT * FROM `artista`'
+
+    var result = await pool.query(a);
+    console.log(result);
+
+    console.log(respuesta.length);
+    console.log(result.length);
+    let aux = [];
+    
+    
+    if (respuesta.length>result.length) {
+        
+        result.forEach(el =>{
+            aux.push(el.nombre);
+        });
+        console.log(aux[0]);
+        let c = 0;
+        let q = 'INSERT INTO `artista`(`nombre`) VALUES ';
+        console.log(aux.indexOf('CRISTIAN CASTRO & CARLOS MACÍAS'));
+        console.log(aux.indexOf('SONALLI'));
+        q = q + '(\'';
+        let ins = '';
+        respuesta.forEach(ele => {
+            
+            
+            //aux.push(ele.ARTIST);
+            let i = aux.indexOf(ele.ARTIST);
+            //console.log(i);
+            if (i == -1) {
+                c = c + 1;
+                console.log(ele.ARTIST);
+                
+                let e = remplaced.replaceall('\'', '\\\'',ele.ARTIST);
+                if (c < (respuesta.length-result.length)) {
+                    ins = ins + ele.ARTIST + ' , ';
+                    q = q + e + '\'),(\'';
+                } else {
+                    ins = ins + ele.ARTIST;
+                    q = q + e + '\')';
+                }
+            }
+
+        });
+        console.log(q);
+        //var res = await pool.query(q);
+        response.status(201).json(ins);
+    }else if (respuesta.length<result.length) {
+        
+        respuesta.forEach(el =>{
+            aux.push(el.ARTIST);
+        });
+        
+        
+        let c = 0;
+        let q = 'DELETE FROM `artista` WHERE `nombre` = ';
+        console.log(aux.indexOf('CRISTIAN CASTRO & CARLOS MACÍAS'));
+        console.log(aux.indexOf('SONALLI'));
+        q = q + '\'';
+        let ins = '';
+        result.forEach(ele => {
+            
+            
+            //aux.push(ele.ARTIST);
+            let i = aux.indexOf(ele.nombre);
+            //console.log(i);
+            if (i == -1) {
+                c = c + 1;
+                console.log(ele.nombre);
+                
+                let e = remplaced.replaceall('\'', '\\\'',ele.nombre);
+                if (c <= (respuesta.length-result.length)) {
+                    ins = ins + ele.nombre + ' , ';
+                    q = q + e + '\' or `nombre` = \'';
+                } else {
+                    ins = ins + ele.nombre;
+                    q = q + e + '\'';
+                }
+            }
+
+        });
+        console.log(q);
+        //var res = await pool.query(q);
+        
+        response.status(201).json(ins);
+    } else{
+        response.status(201).json('No hay artistas nuevos');
+    }
+
+})
+
+
 router.route('/discos/inicial').get(async (request,response)=>{
     let respuesta;
     await axios({
@@ -96,6 +198,107 @@ router.route('/discos/inicial').get(async (request,response)=>{
     
     response.status(201).json(result);
     
+})
+router.route('/discos/actualizar').get(async (request,response)=>{
+    let respuesta;
+    await axios({
+        method: 'GET',
+        url: 'http://localhost:8090/api/discos'
+    }).then(res=>{
+        respuesta = res.data;    
+    }).catch(err => console.log(err))
+    
+    console.log(respuesta);
+    let a = 'SELECT * FROM `disco`'
+
+    var result = await pool.query(a);
+    console.log(result);
+
+    console.log(respuesta.length);
+    console.log(result.length);
+    let aux = [];
+    
+    
+    if (respuesta.length>result.length) {
+        
+        result.forEach(el =>{
+            aux.push(el.nombre);
+        });
+        console.log(aux[0]);
+        let c = 0;
+        let q = 'INSERT INTO `disco`(`UPC`, `artista_id`, `nombre`) VALUES ';
+        //console.log(aux.indexOf('CRISTIAN CASTRO & CARLOS MACÍAS'));
+        //console.log(aux.indexOf('SONALLI'));
+        q = q + '(\'';
+        let ins = '';
+        for (const ele of respuesta) {
+            
+            
+            //aux.push(ele.ARTIST);
+            let i = aux.indexOf(ele.ALBUM_NAME);
+            //console.log(i);
+            if (i == -1) {
+                c = c + 1;
+                console.log(ele.ALBUM_NAME);
+                
+                let e = remplaced.replaceall('\'', '\\\'',ele.ALBUM_NAME);
+                if (c < (respuesta.length-result.length)) {
+                    ins = ins + ele.ALBUM_NAME + ' , ';
+                    q = q + e + '\'),(\'';
+                } else {
+                    ins = ins + ele.ALBUM_NAME;
+                    q = q + e + '\')';
+                }
+            }
+
+        };
+        console.log(q);}/*
+        //var res = await pool.query(q);
+        response.status(201).json(ins);
+    }else if (respuesta.length<result.length) {
+        
+        respuesta.forEach(el =>{
+            aux.push(el.ARTIST);
+        });
+        
+        
+        let c = 0;
+        let q = 'DELETE FROM `artista` WHERE `nombre` = ';
+        console.log(aux.indexOf('CRISTIAN CASTRO & CARLOS MACÍAS'));
+        console.log(aux.indexOf('SONALLI'));
+        q = q + '\'';
+        let ins = '';
+        result.forEach(ele => {
+            
+            
+            //aux.push(ele.ARTIST);
+            let i = aux.indexOf(ele.nombre);
+            //console.log(i);
+            if (i == -1) {
+                c = c + 1;
+                console.log(ele.nombre);
+                
+                let e = remplaced.replaceall('\'', '\\\'',ele.nombre);
+                if (c <= (respuesta.length-result.length)) {
+                    ins = ins + ele.nombre + ' , ';
+                    q = q + e + '\' or `nombre` = \'';
+                } else {
+                    ins = ins + ele.nombre;
+                    q = q + e + '\'';
+                }
+            }
+
+        });
+        console.log(q);
+        //var res = await pool.query(q);
+        
+        response.status(201).json(ins);
+    } else{
+        response.status(201).json('No hay artistas nuevos');
+    }*/
+
+    response.status(201).json('No hay artistas nuevos');
+
 })
 
 router.route('/canciones/inicial').get(async (request,response)=>{
