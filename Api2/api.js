@@ -155,6 +155,23 @@ router.route('/artists/actualizar').get(async (request,response)=>{
 
 })
 
+router.route('/sello/:artista').get(async (request,response)=>{
+    console.log(request.params.artista);
+    let q = 'SELECT * FROM `sello` WHERE `usr` = \'' + request.params.artista + '\'';
+    
+    console.log(q);
+    
+    var result = await pool.query(q);
+    console.log(result);
+
+    if (result == []) {
+        console.log("esta vacio");
+    }
+    
+    response.status(201).json(result);
+   
+})
+
 
 router.route('/discos/inicial').get(async (request,response)=>{
     let respuesta;
@@ -333,6 +350,145 @@ router.route('/canciones/inicial').get(async (request,response)=>{
     var result = await pool.query(q);
     
     response.status(201).json(result);
+   
+})
+
+router.route('/regalias/actualizar').get(async (request,response)=>{
+    let q = 'SELECT * FROM `sello`';
+    var q1 = 'SELECT `s`.`usr`,`a`.`nombre`,`d`.`UPC`,`d`.`nombre` FROM `sello` AS `s` JOIN `artista` AS `a` ON `s`.`id` = `a`.`sello_id` JOIN `disco` AS `d` ON `d`.`artista_id` = `a`.`id` WHERE `s`.`usr` = BINARY \''
+    let q2 = 'SELECT `s`.`usr`,`a`.`nombre`,`d`.`UPC`,`d`.`nombre`,`c`.`ISRC`,`c`.`nombre` FROM `sello` AS `s` JOIN `artista` AS `a` ON `s`.`id` = `a`.`sello_id` JOIN `disco` AS `d` ON `d`.`artista_id` = `a`.`id` JOIN `cancion` AS `c` ON `d`.`UPC` = `c`.`disco_UPC` WHERE `s`.`usr` = BINARY \''
+    let q3 = 'SELECT DISTINCT `r`.`anio`,`r`.`mes` FROM `sello` AS `s` JOIN `artista` AS `a` ON `s`.`id` = `a`.`sello_id` JOIN `disco` AS `d` ON `d`.`artista_id` = `a`.`id` JOIN `cancion` AS `c` ON `d`.`UPC` = `c`.`disco_UPC` JOIN `regalias` AS `r` ON `c`.`ISRC` = `r`.`cancion_id` WHERE `s`.`usr` = BINARY \''
+    var resta = 1000 * 60 * 60 * 24;
+    var calculo = 0;
+    var now= new Date();
+    var respuesta;
+    var respuesta1;
+    var respuesta2;
+    var result = await pool.query(q);
+    //console.log(result);
+    for (const e of result)
+    {
+        //console.log(q3+e.usr+'\'');
+        
+        var result1 = await pool.query(q3+e.usr+'\'');
+        console.log(result1);
+        if(result1.length>0)
+        {
+            console.log('si tiene registros')
+        }else{
+            let result1 = await pool.query(q1+e.usr+'\'');
+            let UPC = '';
+            console.log(result1);
+            let c = 0;
+            result1.forEach(element => {
+                c = c + 1;
+                console.log(element.UPC);
+                if (c < result1.length) {
+                    UPC = UPC + 'upc=' + element.UPC + '&';
+                } else {
+                    UPC = UPC + 'upc=' + element.UPC;
+                }
+            });
+            console.log(UPC);
+        
+            let result2 = await pool.query(q2+e.usr+'\'');
+            let ISRC = [];
+            console.log(result2);
+            let c1 = 0;
+            console.log('-----------------------------------------');
+            result2.forEach(element1 => {
+                c1 = c1 + 1;
+                console.log(element1);
+                ISRC.push(element1.ISRC);
+            });
+            console.log(ISRC);
+            for (let index = 0; index < 12; index++) {
+                calculo = now.getTime() - (resta * (29*(2 + index)));
+                console.log(new Date(calculo).getMonth());
+                let fecha = new Date(calculo);
+                
+                await axios({
+                    method: 'GET',
+                    url: 'http://localhost:8090/api/plataforma/fecha/'+fecha.getFullYear()+'-'+(fecha.getMonth()+1)+'/upc/?'+UPC
+                }).then(res=>{
+                    respuesta = res.data;    
+                }).catch(err => console.log(err))
+                
+                console.log(respuesta);
+
+                for (const elem of respuesta) {
+                    console.log(fecha);
+                    console.log(elem.Retailer);
+                    for (const eleme of ISRC) {
+                        console.log(eleme);
+                        await axios({
+                            method: 'GET',
+                            url: 'http://localhost:8090/api/pais/fecha/'+fecha.getFullYear()+'-'+(fecha.getMonth()+1)+'/plataforma/'+elem.Retailer+'/isrc/'+eleme
+                        }).then(res=>{
+                            respuesta1 = res.data;    
+                        }).catch(err => console.log(err))
+                        
+                        console.log(respuesta1);
+
+                        if (respuesta1.length>0) {
+                            for (const elemn of respuesta1) {
+                                console.log(elemn.Country_Sale);
+                                await axios({
+                                    method: 'GET',
+                                    url: 'http://localhost:8090/api/resumen/pais/'+elemn.Country_Sale+'/fecha/'+fecha.getFullYear()+'-'+(fecha.getMonth()+1)+'/plataforma/'+elem.Retailer+'/isrc/'+eleme
+                                }).then(res=>{
+                                    respuesta2 = res.data;    
+                                }).catch(err => console.log(err))
+                                console.log(respuesta2);
+                            }
+                        }
+                    }
+
+                }
+                
+            }
+        }
+    }
+    /*
+    console.log(now);
+    console.log(now.getMonth());
+    console.log(now.getFullYear());
+    let resta = 1000 * 60 * 60 * 24 * (29*2);
+    let calculo = now.getTime() - resta;
+    console.log(new Date(calculo));*/
+
+    
+    //let respuesta;
+    /*await axios({
+        method: 'GET',
+        url: 'http://localhost:8090/api/plataforma/fecha/:fecha/upc/'
+    }).then(res=>{
+        respuesta = res.data;    
+    }).catch(err => console.log(err))
+    
+    //console.log(respuesta.length);
+    
+    let q = 'INSERT INTO `cancion`(`ISRC`, `disco_UPC`, `nombre`) VALUES ';
+    console.log(respuesta)
+    let c = 0;
+    respuesta.forEach(element => {
+        c = c + 1;
+        q = q + '(\''
+        console.log(c);
+        console.log(element);
+        //let e = element.TRACK_NAME.replace('\'', '\\\'');
+        let e = remplaced.replaceall('\'', '\\\'',element.TRACK_NAME);
+        if (c < respuesta.length) {
+            q = q + element.ISRC + '\',\'' + element.UPC + '\',\'' + e + '\'),';
+        } else {
+            q = q + element.ISRC + '\',\'' + element.UPC + '\',\'' + e + '\')';
+        }
+    });
+    console.log(q);
+    //console.log(c);
+    var result = await pool.query(q);
+    */
+    response.status(201).json("si");
    
 })
 
