@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/7b8b2cc5-10dd-4a56-a4da-33951cf9a02b/resourceGroups/FonarteApi/providers/Microsoft.Web/sites/regaliasapi",
+    "appService.deploySubpath": "."
+}

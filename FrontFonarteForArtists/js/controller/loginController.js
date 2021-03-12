@@ -1,43 +1,38 @@
-app.controller("formulario",['$scope','$rootScope','$http','$window',function($scope,$rootScope,$http,$window){
-    $rootScope.folio = "";
-    $scope.botonesLugar = [null];
-    $scope.lugaresPrecio = [0];
-    $scope.categoria = [null];
-    $scope.categoriaNom = [null];
-    $scope.precio = "$";
-    $scope.seccion = $rootScope.categoria;
-    $scope.user = {};
-    $scope.user.seccion = $scope.seccion;
-    $scope.user.comentario = " ";
-    $scope.user.otrosProd = " ";
-    $scope.cel = 0;
-    $scope.tel = 0;
-    $scope.lugar = [];
-    $scope.tl = false;
-    $scope.tc = false;
+app.controller("formulario",['$scope','$rootScope','$http','$window','$location',function($scope,$rootScope,$http,$window,$location){
+  $rootScope.usr = "";
     $scope.usr = "";
     
     $scope.consultar = function(){
         console.log("Holiiiiii");
         console.log($scope.usr)
+        
         var req = {
             method : "GET" ,
-            url :  "http://localhost:8091/api/artists/"+$scope.usr , 
+            url :  "http://localhost:8091/api/sello/"+$scope.usr , 
             data: {}
           };
           console.log(req);
-          $http(req).success(function (response) {//'response' es el objeto que devuelve el servicio web
-        ////console.log(response);
-            $scope.mapa = response;
-        ////console.log($scope.mapa);
-            $scope.user.seccion = document.getElementById("seccion").value;
-        //console.log($scope.user.seccion);
-            mapa();
+          $http(req).then(function (response) {//'response' es el objeto que devuelve el servicio web
+            console.log(response);
+            console.log(response.data.length);
+            console.log(response.data[0]);
+            //console.log(response.data[0].usr);
+            
+            if (response.data.length > 0) {
+              console.log(response.data[0].usr);
+              $rootScope.usr=response.data[0].usr;
+              console.log($rootScope.usr);
+              console.log($location.path())
+              $location.path('/main');
+            }else {
+              console.log('El usuario No se encuentra');  
+              $window.location.href = '#';
+            }
 
-        }).error(function (response){
-        //console.log(response);
-            alert("Ha fallado la petici\u00F3n. Estado HTTP:"+status);
-        });
+          }, function (response) {
+            console.log('El usuario No se encuentra');
+            $window.location.href = '#';
+          });
     };
 
     /*var mapa = function(){

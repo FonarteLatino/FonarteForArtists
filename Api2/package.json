@@ -2,10 +2,10 @@
   "name": "Api2",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon api.js"
+    "start": "nodemon app.js"
   },
   "dependencies": {
     "body-parsec": "3.0.0",

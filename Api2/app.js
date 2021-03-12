@@ -155,9 +155,9 @@ router.route('/artists/actualizar').get(async (request,response)=>{
 
 })
 
-router.route('/sello/:artista').get(async (request,response)=>{
-    console.log(request.params.artista);
-    let q = 'SELECT * FROM `sello` WHERE `usr` = \'' + request.params.artista + '\'';
+router.route('/sello/:usr').get(async (request,response)=>{
+    console.log(request.params.usr);
+    let q = 'SELECT * FROM `sello` WHERE `usr` = \'' + request.params.usr + '\'';
     
     console.log(q);
     
@@ -355,9 +355,10 @@ router.route('/canciones/inicial').get(async (request,response)=>{
 
 router.route('/regalias/actualizar').get(async (request,response)=>{
     let q = 'SELECT * FROM `sello`';
-    var q1 = 'SELECT `s`.`usr`,`a`.`nombre`,`d`.`UPC`,`d`.`nombre` FROM `sello` AS `s` JOIN `artista` AS `a` ON `s`.`id` = `a`.`sello_id` JOIN `disco` AS `d` ON `d`.`artista_id` = `a`.`id` WHERE `s`.`usr` = BINARY \''
-    let q2 = 'SELECT `s`.`usr`,`a`.`nombre`,`d`.`UPC`,`d`.`nombre`,`c`.`ISRC`,`c`.`nombre` FROM `sello` AS `s` JOIN `artista` AS `a` ON `s`.`id` = `a`.`sello_id` JOIN `disco` AS `d` ON `d`.`artista_id` = `a`.`id` JOIN `cancion` AS `c` ON `d`.`UPC` = `c`.`disco_UPC` WHERE `s`.`usr` = BINARY \''
-    let q3 = 'SELECT DISTINCT `r`.`anio`,`r`.`mes` FROM `sello` AS `s` JOIN `artista` AS `a` ON `s`.`id` = `a`.`sello_id` JOIN `disco` AS `d` ON `d`.`artista_id` = `a`.`id` JOIN `cancion` AS `c` ON `d`.`UPC` = `c`.`disco_UPC` JOIN `regalias` AS `r` ON `c`.`ISRC` = `r`.`cancion_id` WHERE `s`.`usr` = BINARY \''
+    var q1 = 'SELECT `s`.`usr`,`a`.`nombre`,`d`.`UPC`,`d`.`nombre` FROM `sello` AS `s` JOIN `artista` AS `a` ON `s`.`id` = `a`.`sello_id` JOIN `disco` AS `d` ON `d`.`artista_id` = `a`.`id` WHERE `s`.`usr` = BINARY \'';
+    let q2 = 'SELECT `s`.`usr`,`a`.`nombre`,`d`.`UPC`,`d`.`nombre`,`c`.`ISRC`,`c`.`nombre` FROM `sello` AS `s` JOIN `artista` AS `a` ON `s`.`id` = `a`.`sello_id` JOIN `disco` AS `d` ON `d`.`artista_id` = `a`.`id` JOIN `cancion` AS `c` ON `d`.`UPC` = `c`.`disco_UPC` WHERE `s`.`usr` = BINARY \'';
+    let q3 = 'SELECT DISTINCT `r`.`anio`,`r`.`mes` FROM `sello` AS `s` JOIN `artista` AS `a` ON `s`.`id` = `a`.`sello_id` JOIN `disco` AS `d` ON `d`.`artista_id` = `a`.`id` JOIN `cancion` AS `c` ON `d`.`UPC` = `c`.`disco_UPC` JOIN `regalias` AS `r` ON `c`.`ISRC` = `r`.`cancion_id` WHERE `s`.`usr` = BINARY \'';
+    let ax = 'INSERT INTO `regalias`(`cancion_id`, `plataforma`, `anio`, `mes`, `clics`, `ingresos`, `pais`) VALUES (\'';
     var resta = 1000 * 60 * 60 * 24;
     var calculo = 0;
     var now= new Date();
@@ -372,7 +373,7 @@ router.route('/regalias/actualizar').get(async (request,response)=>{
         
         var result1 = await pool.query(q3+e.usr+'\'');
         console.log(result1);
-        if(result1.length>0)
+        if(/*result1.length>0*/result1.length<0)
         {
             console.log('si tiene registros')
         }else{
@@ -391,7 +392,7 @@ router.route('/regalias/actualizar').get(async (request,response)=>{
             });
             console.log(UPC);
         
-            let result2 = await pool.query(q2+e.usr+'\'');
+            let result2 = await pool.query(q2+e.usr+'\' ORDER BY `c`.`ISRC` ASC');
             let ISRC = [];
             console.log(result2);
             let c1 = 0;
@@ -423,7 +424,7 @@ router.route('/regalias/actualizar').get(async (request,response)=>{
                         console.log(eleme);
                         await axios({
                             method: 'GET',
-                            url: 'http://localhost:8090/api/pais/fecha/'+fecha.getFullYear()+'-'+(fecha.getMonth()+1)+'/plataforma/'+elem.Retailer+'/isrc/'+eleme
+                            url: 'http://localhost:8090/api/pais/fecha/'+fecha.getFullYear()+'-'+(fecha.getMonth()+1)+'/plataforma/'+'Spotify'/*elem.Retailer*/+'/isrc/'+eleme
                         }).then(res=>{
                             respuesta1 = res.data;    
                         }).catch(err => console.log(err))
@@ -435,11 +436,16 @@ router.route('/regalias/actualizar').get(async (request,response)=>{
                                 console.log(elemn.Country_Sale);
                                 await axios({
                                     method: 'GET',
-                                    url: 'http://localhost:8090/api/resumen/pais/'+elemn.Country_Sale+'/fecha/'+fecha.getFullYear()+'-'+(fecha.getMonth()+1)+'/plataforma/'+elem.Retailer+'/isrc/'+eleme
+                                    url: 'http://localhost:8090/api/resumen/pais/'+elemn.Country_Sale+'/fecha/'+fecha.getFullYear()+'-'+(fecha.getMonth()+1)+'/plataforma/'+'Spotify'/*elem.Retailer*/+'/isrc/'+eleme
                                 }).then(res=>{
                                     respuesta2 = res.data;    
                                 }).catch(err => console.log(err))
                                 console.log(respuesta2);
+                                for (const e of respuesta2) {
+                                    console.log(ax+eleme+'\',\''+'Spotify'/*elem.Retailer*/+'\','+fecha.getFullYear()+','+(fecha.getMonth()+1)+','+e.TotaldeClics+','+e.RegaliasTotales+',\''+elemn.Country_Sale+'\')');
+                                    let result3 = await pool.query(ax+eleme+'\',\''+'Spotify'/*elem.Retailer*/+'\','+fecha.getFullYear()+','+(fecha.getMonth()+1)+','+e.TotaldeClics+','+e.RegaliasTotales+',\''+elemn.Country_Sale+'\')');
+                                    console.log(result3);
+                                }
                             }
                         }
                     }
@@ -489,6 +495,23 @@ router.route('/regalias/actualizar').get(async (request,response)=>{
     var result = await pool.query(q);
     */
     response.status(201).json("si");
+   
+})
+
+router.route('/regalias/:usr').get(async (request,response)=>{
+    console.log(request.params.usr);
+    let q = 'SELECT `a`.`nombre` AS `nombreArtista`, `d`.`UPC`,`d`.`nombre` AS `nombreDisco`,`c`.`ISRC`,`c`.`nombre` AS `nombreCancion`,`re`.`plataforma`,`re`.`clics`,`re`.`ingresos`,`re`.`anio`,`re`.`mes`,`re`.`pais` FROM `sello` AS `s` JOIN `artista` AS `a` ON `s`.`id` = `a`.`sello_id` JOIN `disco` AS `d` ON `d`.`artista_id` = `a`.`id` JOIN `cancion` AS `c` ON `d`.`UPC` = `c`.`disco_UPC` JOIN `regalias` AS `re` ON `re`.`cancion_id` = `c`.`ISRC` WHERE `s`.`usr` = BINARY \'';
+    q = q + request.params.usr + '\'';
+    console.log(q);
+    
+    var result = await pool.query(q);
+    console.log(result);
+
+    if (result == []) {
+        console.log("esta vacio");
+    }
+    
+    response.status(201).json(result);
    
 })
 
