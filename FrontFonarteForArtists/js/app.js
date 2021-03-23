@@ -12,7 +12,7 @@ app.config(function($routeProvider) {
    .otherwise({redirectTo: '/'});
 });
 app.controller("primero", ['$scope','$rootScope','$http','$location',function($scope,$rootScope,$http,$location){
-   console.log($rootScope.usr);
+   
    $rootScope.usr = 'Sonalli';
    console.log($rootScope.usr);
    if ($rootScope.usr == undefined||"") {

@@ -1,5 +1,5 @@
-<div ng-controller="main">
-    <div class="row justify-content-cente">
+<div>
+    <div class="row justify-content-center">
 
         <div class="col-md"></div>
             
@@ -12,35 +12,23 @@
     </div>
     <div class="row"><br></div>
     <div class="row justify-content-cente">
+           
+        <div class="col-sm-12 col-lg-8">
+            <div id="world-map" style="width: 600px; height: 400px"></div>
+        </div>
 
-        <div class="col-md">
+        <div class="col-sm-12 col-lg-4">
             <h4>Top 5 Canciónes más escuchadas</h4>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item">LA MALAQUEÑA DE JUQUILA (CHILENA) | 3800 escuchas</li>
-                <li class="list-group-item">LA ORQUÍDEA (HUAPANGO) | 1800 escuchas</li>
-                <li class="list-group-item">A VIVIR SE APRENDE VIVIENDO | 840 escuchas</li>
-                <li class="list-group-item">JARABE NAYARITA (EN VIVO) | 820 escuchas</li>
-                <li class="list-group-item">EL TORO RABÓN (SON DE TARIMA) | 780 escuchas</li>
-            </ul>
-        </div>
-            
-        <div class=" col-md">
-            <h4>Top 5 Discos más escuchados</h4>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item">SONALLI | {{3800+1800+841+786+707+666+530+369}}</li>
-                <li class="list-group-item">SESIÓN DESDE RADIO EDUCACIÓN (EN VIVO) | {{219+281+377+402+472+821}}</li>
-                
-            </ul>
-        </div>
-
-        <div class=" col-md">
-            <h4>Top 5 Plataformas con más escuchas</h4>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item">Spotify</li>
-                <li class="list-group-item">YouTube</li>
-                <li class="list-group-item">Amazon Unlimited</li>
-                
-            </ul>
+            <table class="table">
+                <tr>
+                    <th>Canción</th>
+                    <th>Escuchas</th>
+                </tr>
+                <tr ng-repeat="e in cancion | limitTo:5 | orderBy:'-clics'">
+                    <td>{{e.nombreCancion}}</td>
+                    <td>{{e.clics}}</td>
+                </tr>
+            </table>
         </div>
         
         
@@ -48,8 +36,61 @@
 
     <div class="row justify-content-cente">
 
+        <div class="col-sm-12 col-md-6">
+            <br>
+            <br>
+            <h4>Top 5 Plataformas con más escuchas</h4>
+            <table class="table">
+                <tr>
+                    <th>Plataforma</th>
+                    <th>Escuchas</th>
+                </tr>
+                <tr ng-repeat="e in plataforma | limitTo:5 | orderBy:'-clics'">
+                    <td>{{e.plataforma}}</td>
+                    <td>{{e.clics}}</td>
+                </tr>
+            </table>
+        </div>
         
-        
-        
+        <div class="col-sm-12 col-md-6">
+            <br>
+            <br>
+            <h4>Top 5 Discos más escuchados</h4>
+            <table class="table">
+                <tr>
+                    <th>Disco</th>
+                    <th>Escuchas</th>
+                </tr>
+                <tr ng-repeat="e in disco | limitTo:5 | orderBy:'-clics'">
+                    <td>{{e.nombreDisco}}</td>
+                    <td>{{e.clics}}</td>
+                </tr>
+            </table>
+        </div>       
     </div>
+
+    <!--div class="row justify-content-cente">
+
+        <div class="col-md">
+            Hola
+            <table class="table">
+                <tr>
+                    <th>Disco</th>
+                    <th>Escuchas</th>
+                </tr>
+                <tr ng-repeat="e in data | limitTo:5 | orderBy:'-clics'">
+                    <td>{{e.nombreDisco}}</td>
+                    <td>{{e.clics}}</td>
+                </tr>
+            </table>
+            <ul>
+                <li ng-repeat="da in dat">{{data}}</li>
+            </ul>
+        </div>
+        <div class="col-md"></div>
+        <div class="col-md">
+            
+        </div>
+    </div-->
 </div>
+

@@ -73,6 +73,15 @@ router.route('/upc/:upc').get((request,response)=>{
         response.json(result[0]);
     })
 })
+router.route('/regalia/fecha/upc/isrc').get((request,response)=>{
+    //console.log(request.params);
+    console.log(request.query);
+    dboperations.retailer(request.query.upc,request.query.isrc,request.query.f).then(result => {
+        console.log(result);
+        response.json(result[0]);
+    })
+
+})
 
 router.route('/plataforma/fecha/:fecha/upc/').get((request,response)=>{
     console.log(request.params);

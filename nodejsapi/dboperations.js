@@ -149,6 +149,50 @@ async function resumen(isrc,fecha,plataforma,pais){
     }
 }
 
+async function retailer(upc,isrc,fecha){
+    let q = "SELECT * FROM [dbo].[000_Client_Dashboard_Total] where (";
+    //console.log(q);
+    let c = 0;
+    let a1 = '';
+    let a2 = '';
+    let a3 = '';
+    upc.forEach(element => {
+        c = c + 1;
+        if (c < upc.length) {
+            a1 = a1 + 'UPC=\'' + element + '\' or ';
+        } else {
+            a1 = a1 + 'UPC=\'' + element + '\'';
+        }
+    });
+    c = 0;
+    isrc.forEach(element1 => {
+        c = c + 1;
+        if (c < isrc.length) {
+            a2 = a2 + 'ISRC=\'' + element1 + '\' or ';
+        } else {
+            a2 = a2 + 'ISRC=\'' + element1 + '\'';
+        }
+    });
+    c = 0;
+    fecha.forEach(element2 => {
+        c = c + 1;
+        if (c < fecha.length) {
+            a3 = a3 + 'Year_Month=\'' + element2 + '\' or ';
+        } else {
+            a3 = a3 + 'Year_Month=\'' + element2 + '\'';
+        }
+    });
+    q = q + a1 + ' or ' + a2 + ') and (' + a3 + ')';
+    try {
+        let pool = await sql.connect(config);
+        let product = await pool.request().query(q);
+        return product.recordsets;
+    }
+    catch (error) {
+        console.log(error);
+    }
+}
+
 module.exports = {
     artistas : artistas,
     discos : discos,
@@ -159,5 +203,6 @@ module.exports = {
     upc : upc,
     plataformaFecha : plataformaFecha,
     paisFecha : paisFecha,
-    resumen : resumen
+    resumen : resumen,
+    retailer : retailer
 }
