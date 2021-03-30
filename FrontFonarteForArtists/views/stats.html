@@ -4,27 +4,34 @@
         <div class="col-md"></div>
             
             <div class=" col-md ">
-                <h1>{{"Sonalli"}}</h1>
+                <h1>{{artista}}</h1>
             </div>
             <div class=" col-md"></div>
         
         
     </div>
-    <div class="row"><br></div>
+    <div class="row"><br>
+        <p>Ingresos estimados del periodo: ${{iTotal | number}}MXN</p>
+        <br>
+    </div>
     <div class="row justify-content-cente">
            
         <div class="col-sm-12 col-lg-8">
+            <h4>Escuchas por país</h4>
             <div id="world-map" style="width: 600px; height: 400px"></div>
+            <br>
+            <h4>Ingresos por plataforma</h4>
+            <canvas class="chart chart-pie" chart-data="datos" chart-labels="etiquetas"></canvas>
         </div>
 
         <div class="col-sm-12 col-lg-4">
-            <h4>Top 5 Canciónes más escuchadas</h4>
+            <h4>Top Canciones</h4>
             <table class="table">
                 <tr>
                     <th>Canción</th>
                     <th>Escuchas</th>
                 </tr>
-                <tr ng-repeat="e in cancion | limitTo:5 | orderBy:'-clics'">
+                <tr ng-repeat="e in cancion | limitTo:10 | orderBy:'-clics'">
                     <td>{{e.nombreCancion}}</td>
                     <td>{{e.clics}}</td>
                 </tr>
@@ -39,15 +46,17 @@
         <div class="col-sm-12 col-md-6">
             <br>
             <br>
-            <h4>Top 5 Plataformas con más escuchas</h4>
+            <h4>Top Plataformas</h4>
             <table class="table">
                 <tr>
                     <th>Plataforma</th>
                     <th>Escuchas</th>
+                    <th>Ingresos estimados</th>
                 </tr>
-                <tr ng-repeat="e in plataforma | limitTo:5 | orderBy:'-clics'">
+                <tr ng-repeat="e in plataforma | limitTo:7 | orderBy:'-clics'">
                     <td>{{e.plataforma}}</td>
                     <td>{{e.clics}}</td>
+                    <td>${{e.ingresos | number}}MXN</td>
                 </tr>
             </table>
         </div>
@@ -55,7 +64,7 @@
         <div class="col-sm-12 col-md-6">
             <br>
             <br>
-            <h4>Top 5 Discos más escuchados</h4>
+            <h4>Top 5 Discos</h4>
             <table class="table">
                 <tr>
                     <th>Disco</th>
@@ -69,28 +78,15 @@
         </div>       
     </div>
 
-    <!--div class="row justify-content-cente">
+    <div class="row justify-content-cente">
 
         <div class="col-md">
-            Hola
-            <table class="table">
-                <tr>
-                    <th>Disco</th>
-                    <th>Escuchas</th>
-                </tr>
-                <tr ng-repeat="e in data | limitTo:5 | orderBy:'-clics'">
-                    <td>{{e.nombreDisco}}</td>
-                    <td>{{e.clics}}</td>
-                </tr>
-            </table>
-            <ul>
-                <li ng-repeat="da in dat">{{data}}</li>
-            </ul>
+            
         </div>
         <div class="col-md"></div>
         <div class="col-md">
             
         </div>
-    </div-->
+    </div>
 </div>
 

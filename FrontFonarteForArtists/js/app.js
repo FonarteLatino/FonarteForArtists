@@ -1,4 +1,4 @@
-var app = angular.module("FonarteForArtists",['ngRoute']);
+var app = angular.module("FonarteForArtists",['ngRoute','chart.js']);
 app.config(function($routeProvider) {
    $routeProvider
    .when('/' ,{templateUrl: './views/login.html', controller: ''})

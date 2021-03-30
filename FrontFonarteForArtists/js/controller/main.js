@@ -178,24 +178,45 @@ app.controller("main",['$scope','$rootScope','$http','$window','$location',funct
       "QA": 0,
       "MZ": 0
     };
+    $scope.gdpData1M = $scope.gdpData;
+    $scope.gdpData3M = $scope.gdpData;
+    $scope.gdpData6M = $scope.gdpData;
     var pa = ["BD","BE","BF","BG","BA","BN","BO","JP","BI","BJ","BT","JM","BW","BR","BS","BY","BZ","RU","RW","RS","TL","TM","TJ","RO","GW","GT","GR","GQ","GY","GE","GB","GA","GN","GM","GL","GH","OM","TN","JO","HR","HT","HU","HN","PR","PS","PT","PY","PA","PG","PE","PK","PH","PL","ZM","EH","EE","EG","ZA","EC","IT","VN","SB","ET","SO","ZW","ES","ER","ME","MD","MG","MA","UZ","MM","ML","MN","MK","MW","MR","UG","MY","MX","IL","FR","XS","FI","FJ","FK","NI","NL","NO","NA","VU","NC","NE","NG","NZ","NP","XK","CI","CH","CO","CN","CM","CL","XC","CA","CG","CF","CD","CZ","CY","CR","CU","SZ","SY","KG","KE","SS","SR","KH","SV","SK","KR","SI","KP","KW","SN","SL","KZ","SA","SE","SD","DO","DJ","DK","DE","YE","DZ","US","UY","LB","LA","TW","TT","TR","LK","LV","LT","LU","LR","LS","TH","TF","TG","TD","LY","AE","VE","AF","IQ","IS","IR","AM","AL","AO","AR","AU","AT","IN","TZ","AZ","IE","ID","UA","QA","MZ"];
     $scope.pais = $scope.gdpData;
     $scope.data=[];
+    $scope.cancion1M = [];
+    $scope.cancion3M = [];
+    $scope.cancion6M = [];
     $scope.cancion = [];
+    $scope.disco1M = [];
+    $scope.disco3M = [];
+    $scope.disco6M = [];
     $scope.disco = [];
+    $scope.plataforma1M = [];
+    $scope.plataforma3M = [];
+    $scope.plataforma6M = [];
     $scope.plataforma = [];
+    $scope.iTotal1M = 0;
+    $scope.iTotal3M = 0;
+    $scope.iTotal6M = 0;
+    $scope.iTotal = 0;
+    $scope.etiquetas1M = [];
+    $scope.etiquetas3M = [];
+    $scope.etiquetas6M = [];
+    $scope.etiquetas = [];
+    $scope.datos1M = [];
+    $scope.datos3M = [];
+    $scope.datos6M = [];
+    $scope.datos = [];
+    $scope.artista = '';
+    var resta = 1000 * 60 * 60 * 24;
+    var calculo = [];
+    var now = new Date();
     
     var mapa = function(){
       
-      //console.log('si se llama')
-      //$scope.gdpData = $scope.pais;
-      //console.log($scope.pais);
-      //console.log(pa);
       pa.forEach(element => {
   
-        /*console.log(element);
-       //console.log($scope.pais[element]);
-       //console.log($scope.gdpData[element]);*/
         $scope.gdpData[element] = $scope.pais[element];
        
       });
@@ -209,30 +230,49 @@ app.controller("main",['$scope','$rootScope','$http','$window','$location',funct
                 }]
             },
             onRegionTipShow: function(e, el, code){
-                //console.log(e);
-                //console.log(el);
-                //console.log($scope.gdpData);
-                //console.log(el.html());
-                //console.log(code);
-                //console.log(gdpData);
-                //console.log(gdpData[code]);
+                
                 el.html(el.html()+' '+$scope.gdpData[code]+' Escuchas');
             }
         });
     };
 
     var init = function() {
+      
 
+      
+      let f = '';
+      let a = -1;
+      for (let index = 0; index < 12; index++) {
+        let calc = now.getTime() - (resta * (29*(2 + index)));
+        console.log(new Date(calc).getMonth());
+        let fecha = new Date(calc);
+        console.log('a:'+a);
+        console.log('b:'+fecha.getMonth());
+        
+            if(a == fecha.getMonth()){
+                f = (fecha.getFullYear()-1)+'-'+(fecha.getMonth()+12);
+                a = fecha.getMonth()+12;
+            }else if(a < fecha.getMonth()){
+              f = fecha.getFullYear()+'-'+(fecha.getMonth()+1);
+              a = fecha.getMonth();
+            }else if(a > fecha.getMonth()){
+              f = fecha.getFullYear()+'-'+(fecha.getMonth());
+              a = fecha.getMonth();
+            }else {
+                f = fecha.getFullYear()+'-'+(fecha.getMonth());
+                a = fecha.getMonth()-1;
+            }
+            calculo.push(f);
+        };
+        console.log(calculo);
          
         $scope.usr="No";
-       //console.log($rootScope.usr);
-       //console.log("funcion de inicio");
         if ($rootScope.usr == undefined||"") {
-           //console.log("indefinido");
+           
             $location.path('/');
-           //console.log('Claro que no hay');
+           
          }else {
-           //console.log($rootScope.usr);
+           
             $scope.usr = $rootScope.usr;
             var req = {
                 method : "GET" ,
@@ -241,129 +281,142 @@ app.controller("main",['$scope','$rootScope','$http','$window','$location',funct
               };
              //console.log(req);
               $http(req).then(function (response) {//'response' es el objeto que devuelve el servicio web
-               //console.log(response);
-               //console.log(response.data.length);
-               //console.log(response.data);
-                consultar();
-                
-                //console.log(response.data[0].usr);
-                
-                /*if (response.data.length > 0) {
-                 //console.log(response.data[0].usr);
-                  $rootScope.usr=response.data[0].usr;
-                 //console.log($rootScope.usr);
-                 //console.log($location.path())
-                  $location.path('/main');
-                }else {
-                 //console.log('El usuario No se encuentra');  
-                  $window.location.href = '#';
-                }*/
+              
+                consultar(response.data);
     
               }, function (response) {
                //console.log('El usuario No se encuentra');
                 $window.location.href = '#';
               });
-         }
-
-        /*if (!$scope.user.seccion) {
-          //console.log("no existe");
-          $scope.user.seccion = document.getElementById("seccion").value;
-        }
-        $scope.mapa = [];
-        var req = {
-          method : "POST" ,
-          url :  "http://sonparamilo.jonathanarc.net/apirest/busqueda/lugaresArea" , 
-          data: {
-            area: $scope.user.seccion
-          }
-        };
-        //console.log(req);
-        $http(req).success(function (response) {//'response' es el objeto que devuelve el servicio web
-          ////console.log(response);
-          $scope.mapa = response;
-          ////console.log($scope.mapa);
-          $scope.user.seccion = document.getElementById("seccion").value;
-          //console.log($scope.user.seccion);
-          mapa();
-
-        }).error(function (response){
-          //console.log(response);
-          alert("Ha fallado la petici\u00F3n. Estado HTTP:"+status);
-        });*/
-        
+         }        
         
     };
       
 
-      init();
+    init();
 
-      //$scope.usr = "";
       
-      var consultar = function(){
-         //console.log("Holiiiiii");
-         //console.log($scope.usr)
+      
+    var consultar = function(reg){
+         
+      //console.log(reg);
+      
+      if (reg.length > 0) {
+        //console.log(response.data[0]);
+        $scope.data=reg;
+        reg.forEach(element => {
+          pais(element.pais,element.clics);
+          cancion(element);
+          disco(element);
+          plataforma(element);
+          $scope.iTotal = $scope.iTotal + element.ingresos;
           
-          var req = {
-              method : "GET" ,
-              url :  "http://localhost:8091/api/regalias/"+$scope.usr , 
-              data: {}
-            };
-           //console.log(req);
-            $http(req).then(function (response) {//'response' es el objeto que devuelve el servicio web
-             //console.log(response);
-             //console.log(response.data.length);
-             //console.log(response.data);
-              //console.log(response.data[0].usr);
-              
-              if (response.data.length > 0) {
-               //console.log(response.data[0]);
-                $scope.data=response.data;
-                response.data.forEach(element => {
-                  pais(element.pais,element.clics);
-                  cancion(element);
-                  disco(element);
-                  plataforma(element);
-                });
-                
-                mapa();
-              }else {
-               //console.log('El usuario No se encuentra');  
-                $window.location.href = '#';
-              }
-  
-            }, function (response) {
-             //console.log('El usuario No se encuentra');
-              $window.location.href = '#';
-            });
+        });
+        $scope.artista = reg[0].nombreArtista;
+        mapa();
+        pastel();
+      }else {
+       //console.log('El usuario No se encuentra');  
+        $window.location.href = '#';
+      }
 
 
-      };
+    };
+
+    var pastel = function() {
+      //$scope.etiquetas = ['Gastos', 'Ventas', 'Compras'];
+      //$scope.datos = [1244, 1500, 2053];
+      //console.table($scope.plataforma);
+      let aux = $scope.plataforma.sort(((a, b) => b.ingresos - a.ingresos));
+      aux.forEach(element => {
+        $scope.etiquetas.push(element.plataforma);
+        $scope.datos.push(element.ingresos);
+      });
+      //console.log($scope.etiquetas);
+      //console.log($scope.datos);
+    }
       
       var cancion = function(e1) {
         //console.log(e1);
+        let ax1 = $scope.cancion1M
+        let ax3 = $scope.cancion3M
+        let ax6 = $scope.cancion6M
         let ax = $scope.cancion
         let c = {
           "nombreCancion":e1.nombreCancion,
           "clics":e1.clics
         };
         
+        let a1 = ax1.find(nombre => nombre.nombreCancion === c.nombreCancion);
+        let a3 = ax3.find(nombre => nombre.nombreCancion === c.nombreCancion);
+        let a6 = ax6.find(nombre => nombre.nombreCancion === c.nombreCancion);
         let a = ax.find(nombre => nombre.nombreCancion === c.nombreCancion);
         
+        if (e1.anio == calculo[0]) {
+          //console.log(calculo[0]);
+          console.log("1M");
+          if (a == undefined){
+            //console.log("no se encontro");
+            //console.log(c);
+            $scope.cancion1M.push(c);
+            $scope.cancion3M.push(c);
+            $scope.cancion6M.push(c);
+            
+            //console.log(a);
+          }
+          else{
+            //console.log(c);
+            //console.log(a);
+            a1.clics = a1.clics + c.clics;
+            a3.clics = a3.clics + c.clics;
+            a6.clics = a6.clics + c.clics;
+            
+            //console.log(a);
+          }
+
+        } else if (e1.anio == calculo[1] || e1.anio == calculo[2]) {
+          //console.log(calculo[0]);
+          console.log("3M");
+          if (a == undefined){
+            //console.log("no se encontro");
+            //console.log(c);
+            $scope.cancion3M.push(c);
+            $scope.cancion6M.push(c);
+            
+            //console.log(a);
+          }
+          else{
+            //console.log(c);
+            //console.log(a);
+            a3.clics = a3.clics + c.clics;
+            a6.clics = a6.clics + c.clics;
+            
+            //console.log(a);
+          }
+        } else if (e1.anio == calculo[3] || e1.anio == calculo[4] || e1.anio == calculo[5]) {
+          //console.log(calculo[0]);
+          console.log("6M");
+          if (a == undefined){
+            $scope.cancion6M.push(c);
+            
+          }
+          else{
+            a6.clics = a6.clics + c.clics;
+            
+          }
+        } 
         
         if (a == undefined){
-          //console.log("no se encontro");
-          //console.log(c);
-          $scope.cancion.push(c);
-          //console.log(a);
+            
+          //$scope.cancion.push(c);
         }
         else{
-          //console.log(c);
-          //console.log(a);
+          
           a.clics = a.clics + c.clics;
-          //console.log(a);
         }
        //console.log($scope.cancion);
       };
+
       var disco = function(e2) {
        //console.log(e2);
         let ax = $scope.disco
@@ -389,12 +442,14 @@ app.controller("main",['$scope','$rootScope','$http','$window','$location',funct
         }
        //console.log($scope.disco);
       };
+
       var plataforma = function(e3) {
        //console.log(e3);
         let ax = $scope.plataforma
         let c = {
           "plataforma":e3.plataforma,
-          "clics":e3.clics
+          "clics":e3.clics,
+          "ingresos": e3.ingresos
         };
         
         let a = ax.find(nombre => nombre.plataforma === c.plataforma);
@@ -410,6 +465,7 @@ app.controller("main",['$scope','$rootScope','$http','$window','$location',funct
           //console.log(c);
           //console.log(a);
           a.clics = a.clics + c.clics;
+          a.ingresos = a.ingresos + c.ingresos;
           //console.log(a);
         }
        //console.log($scope.plataforma);

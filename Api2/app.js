@@ -421,66 +421,36 @@ router.route('/regalias/actualizar').get(async (request,response)=>{
                 console.log('a:'+a);
                 console.log('b:'+fecha.getMonth());
                 if (index<11) {
-                    if(a != fecha.getMonth()){
-                        f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth()+1) + '&';
-                        a = fecha.getMonth();
+                    if(a == fecha.getMonth()){
+                        f = f + 'f=' + (fecha.getFullYear()-1)+'-'+(fecha.getMonth()+12) + '&';
+                        a = fecha.getMonth()+12;
+                    }else if(a < fecha.getMonth()){
+                      f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth()+1) + '&';
+                      a = fecha.getMonth();
+                    }else if(a > fecha.getMonth()){
+                      f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth()) + '&';
+                      a = fecha.getMonth();
                     }else {
                         f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth()) + '&';
                         a = fecha.getMonth()-1;
                     }
                 }else {
-                    if(a != fecha.getMonth()){
-                        f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth()+1);
-                        a = fecha.getMonth();
+                    if(a == fecha.getMonth()){
+                        f = f + 'f=' + (fecha.getFullYear()-1)+'-'+(fecha.getMonth()+12);
+                        a = fecha.getMonth()+12;
+                    }else if(a < fecha.getMonth()){
+                      f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth()+1);
+                      a = fecha.getMonth();
+                    }else if(a > fecha.getMonth()){
+                      f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth());
+                      a = fecha.getMonth();
                     }else {
                         f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth());
                         a = fecha.getMonth()-1;
                     }
                 }
 
-                /*await axios({
-                    method: 'GET',
-                    url: 'http://localhost:8090/api/plataforma/fecha/'+fecha.getFullYear()+'-'+(fecha.getMonth()+1)+'/upc/?'+UPC
-                }).then(res=>{
-                    respuesta = res.data;    
-                }).catch(err => console.log(err))
-                
-                console.log(respuesta);
-
-                for (const elem of respuesta) {
-                    console.log(fecha);
-                    console.log(elem.Retailer);
-                    for (const eleme of ISRC) {
-                        console.log(eleme);
-                        await axios({
-                            method: 'GET',
-                            url: 'http://localhost:8090/api/pais/fecha/'+fecha.getFullYear()+'-'+(fecha.getMonth()+1)+'/plataforma/'+'Spotify'/*elem.Retailer*//*+'/isrc/'+eleme
-                        }).then(res=>{
-                            respuesta1 = res.data;    
-                        }).catch(err => console.log(err))
-                        
-                        console.log(respuesta1);
-
-                        if (respuesta1.length>0) {
-                            for (const elemn of respuesta1) {
-                                console.log(elemn.Country_Sale);
-                                await axios({
-                                    method: 'GET',
-                                    url: 'http://localhost:8090/api/resumen/pais/'+elemn.Country_Sale+'/fecha/'+fecha.getFullYear()+'-'+(fecha.getMonth()+1)+'/plataforma/'+'Spotify'/*elem.Retailer*//*+'/isrc/'+eleme
-                                }).then(res=>{
-                                    respuesta2 = res.data;    
-                                }).catch(err => console.log(err))
-                                console.log(respuesta2);
-                                for (const e of respuesta2) {
-                                    console.log(ax+eleme+'\',\''+'Spotify'/*elem.Retailer*//*+'\','+fecha.getFullYear()+','+(fecha.getMonth()+1)+','+e.TotaldeClics+','+e.RegaliasTotales+',\''+elemn.Country_Sale+'\')');
-                                    let result3 = await pool.query(ax+eleme+'\',\''+'Spotify'/*elem.Retailer*//*+'\','+fecha.getFullYear()+','+(fecha.getMonth()+1)+','+e.TotaldeClics+','+e.RegaliasTotales+',\''+elemn.Country_Sale+'\')');
-                                    console.log(result3);
-                                }
-                            }
-                        }
-                    }
-
-                }*/
+                /**/
                 
             }
             console.log(f);
@@ -23292,69 +23262,67 @@ router.route('/regalias/actualizar').get(async (request,response)=>{
                     "Tipo_de_cambio": null
                 }
             ];
-
+            let aux = [];
+            
             var qi = 'INSERT INTO `regalias`(`cancion_id`, `plataforma`, `clics`, `ingresos`, `anio`, `mes`, `pais`) VALUES ';
             let qx = '';
             let cd = 0;
-            console.log(respuesta.length);
+            let ax = '';
+            
             respuesta.forEach(element => {
-                console.log(element);
+                //console.log(element);
+                
+                //console.log(respuesta.length);
+                ax = aux.find(nombre => nombre.Year_Month === element.Year_Month&&nombre.Retailer === element.Retailer&&nombre.Country_Sale === element.Country_Sale&&nombre.ISRC === element.ISRC);
+                if(ax == undefined){
+                    //console.log(ax);
+                    if (element.Tipo_de_cambio == null) {
+                        
+                        element.Tipo_de_cambio = 1;
+                        element.Net_Royalty_Total = (element.Net_Royalty_Total*18);
+                    }else {
+                        
+                        element.Net_Royalty_Total = (element.Net_Royalty_Total*element.Tipo_de_cambio);
+                    }
+                    aux.push(element);
+                }else {
+                    //console.log(ax);
+                    if (element.Tipo_de_cambio == null) {
+                        
+                        element.Tipo_de_cambio = 1;
+                        ax.Net_Royalty_Total = ax.Net_Royalty_Total + (element.Net_Royalty_Total*18);
+                        ax.Quantity = ax.Quantity + element.Quantity;
+                    }else {
+                        
+                        ax.Net_Royalty_Total = ax.Net_Royalty_Total + (element.Net_Royalty_Total*element.Tipo_de_cambio);
+                        ax.Quantity = ax.Quantity + element.Quantity;
+                    }
+                    
+                }
+                
+            });
+            aux.forEach(element => {
                 cd = cd + 1;
-                if (cd < respuesta.length) {
+                if (cd < aux.length) {
                     
                     qx = qx + '(\'' + element.ISRC + '\',\'' + element.Retailer + '\',' + element.Quantity + ',' + element.Net_Royalty_Total + ',\'' + element.Year_Month + '\',\'0\',\'' + element.Country_Sale + '\'),';
                 }else {
                     qx = qx + '(\'' + element.ISRC + '\',\'' + element.Retailer + '\',' + element.Quantity + ',' + element.Net_Royalty_Total + ',\'' + element.Year_Month + '\',\'0\',\'' + element.Country_Sale + '\')';
                 }
             });
-            
-            //console.log(qx);
-            console.log(qi+qx);
+            console.log(aux.length);
+            console.log(respuesta.length);
+
+            console.log(qx);
+            //console.log(qi+qx);
             qi=qi+qx;
+            //qi = aux;
         }
 
 
     }
-    /*
-    console.log(now);
-    console.log(now.getMonth());
-    console.log(now.getFullYear());
-    let resta = 1000 * 60 * 60 * 24 * (29*2);
-    let calculo = now.getTime() - resta;
-    console.log(new Date(calculo));*/
-
-    
-    //let respuesta;
-    /*await axios({
-        method: 'GET',
-        url: 'http://localhost:8090/api/plataforma/fecha/:fecha/upc/'
-    }).then(res=>{
-        respuesta = res.data;    
-    }).catch(err => console.log(err))
-    
-    //console.log(respuesta.length);
-    
-    let q = 'INSERT INTO `cancion`(`ISRC`, `disco_UPC`, `nombre`) VALUES ';
-    console.log(respuesta)
-    let c = 0;
-    respuesta.forEach(element => {
-        c = c + 1;
-        q = q + '(\''
-        console.log(c);
-        console.log(element);
-        //let e = element.TRACK_NAME.replace('\'', '\\\'');
-        let e = remplaced.replaceall('\'', '\\\'',element.TRACK_NAME);
-        if (c < respuesta.length) {
-            q = q + element.ISRC + '\',\'' + element.UPC + '\',\'' + e + '\'),';
-        } else {
-            q = q + element.ISRC + '\',\'' + element.UPC + '\',\'' + e + '\')';
-        }
-    });
-    console.log(q);
-    //console.log(c);
-    var result = await pool.query(q);
-    */
-    response.status(201).json(qi);
+    let resu1 = await pool.query(qi);
+    response.status(201).json(resu1);
    
 })
 
