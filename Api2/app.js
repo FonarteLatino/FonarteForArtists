@@ -368,41 +368,88 @@ router.route('/regalias/actualizar').get(async (request,response)=>{
     var respuesta2;
     var result = await pool.query(q);
     //console.log(result);
+    let m = 0;
+    let a = 0;
+    let f = '';
+    calculo = now.getTime() - (resta * (29*2));
+    let fecha = new Date(calculo);
+    let am;
+    let ay;
+   
+    console.log(m);
+    console.log(a);
+    for (let index = 0; index < 12; index++) {
+        console.log('-----------------------------------------');
+        am = fecha.getMonth()-(index+m);
+        ay = fecha.getFullYear()-a;
+        console.log(am);
+        console.log(ay);
+
+        if(index<11) {
+            if (am == 0)
+            {
+                console.log('es 12');
+                m = -12;
+                a = 1;
+                am = fecha.getMonth()-(index+m);
+                ay = fecha.getFullYear()-a;
+                f = f + 'f=' + ay +'-'+ am + '&';
+            }
+            else {
+                f = f + 'f=' + ay +'-'+ am + '&';
+            }
+        } else {
+            if (am == 0)
+            {
+                console.log('es 12');
+                m = -12;
+                a = 1;
+                am = fecha.getMonth()-(index+m);
+                ay = fecha.getFullYear()-a;
+                f = f + 'f=' + ay +'-'+ am;
+            }
+            else {
+                f = f + 'f=' + ay +'-'+ am;
+            }
+        }
+    }
+    
+    console.log(f);
     for (const e of result)
     {
         //console.log(q3+e.usr+'\'');
         
         var result1 = await pool.query(q3+e.usr+'\'');
-        console.log(result1);
+        //console.log(result1);
         if(/*result1.length>0*/result1.length<0)
         {
             console.log('si tiene registros')
         }else{
             let result1 = await pool.query(q1+e.usr+'\'');
             let UPC = '';
-            console.log(result1);
+            //console.log(result1);
             
             let c = 0;
             result1.forEach(element => {
                 c = c + 1;
-                console.log(element.UPC);
+                //console.log(element.UPC);
                 if (c < result1.length) {
                     UPC = UPC + 'upc=' + element.UPC + '&';
                 } else {
                     UPC = UPC + 'upc=' + element.UPC;
                 }
             });
-            console.log(UPC);
+            //console.log(UPC);
             
             let result2 = await pool.query(q2+e.usr+'\' ORDER BY `c`.`ISRC` ASC');
             let ISRC = [];
             let ISRC1 = '';
-            console.log(result2);
+            //console.log(result2);
             let c1 = 0;
-            console.log('-----------------------------------------');
+            //console.log('-----------------------------------------');
             result2.forEach(element1 => {
                 c1 = c1 + 1;
-                console.log(element1);
+                //console.log(element1);
                 ISRC.push(element1.ISRC);
                 if (c < result2.length) {
                     ISRC1 = ISRC1 + 'isrc=' + element1.ISRC + '&';
@@ -410,50 +457,9 @@ router.route('/regalias/actualizar').get(async (request,response)=>{
                     ISRC1 = ISRC1 + 'isrc=' + element1.ISRC;
                 }
             });
-            console.log(ISRC);
-            console.log(ISRC1)
-            let f = '';
-            let a = -1;
-            for (let index = 0; index < 12; index++) {
-                calculo = now.getTime() - (resta * (29*(2 + index)));
-                console.log(new Date(calculo).getMonth());
-                let fecha = new Date(calculo);
-                console.log('a:'+a);
-                console.log('b:'+fecha.getMonth());
-                if (index<11) {
-                    if(a == fecha.getMonth()){
-                        f = f + 'f=' + (fecha.getFullYear()-1)+'-'+(fecha.getMonth()+12) + '&';
-                        a = fecha.getMonth()+12;
-                    }else if(a < fecha.getMonth()){
-                      f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth()+1) + '&';
-                      a = fecha.getMonth();
-                    }else if(a > fecha.getMonth()){
-                      f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth()) + '&';
-                      a = fecha.getMonth();
-                    }else {
-                        f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth()) + '&';
-                        a = fecha.getMonth()-1;
-                    }
-                }else {
-                    if(a == fecha.getMonth()){
-                        f = f + 'f=' + (fecha.getFullYear()-1)+'-'+(fecha.getMonth()+12);
-                        a = fecha.getMonth()+12;
-                    }else if(a < fecha.getMonth()){
-                      f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth()+1);
-                      a = fecha.getMonth();
-                    }else if(a > fecha.getMonth()){
-                      f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth());
-                      a = fecha.getMonth();
-                    }else {
-                        f = f + 'f=' + fecha.getFullYear()+'-'+(fecha.getMonth());
-                        a = fecha.getMonth()-1;
-                    }
-                }
-
-                /**/
-                
-            }
-            console.log(f);
+            //console.log(ISRC);
+            //console.log(ISRC1)
+            
             /*await axios({
                 method: 'GET',
                 url: 'http://localhost:8090/api/regalia/fecha/upc/isrc?'+UPC+'&'+ISRC1+'&'+f
@@ -23310,11 +23316,11 @@ router.route('/regalias/actualizar').get(async (request,response)=>{
                     qx = qx + '(\'' + element.ISRC + '\',\'' + element.Retailer + '\',' + element.Quantity + ',' + element.Net_Royalty_Total + ',\'' + element.Year_Month + '\',\'0\',\'' + element.Country_Sale + '\')';
                 }
             });
-            console.log(aux.length);
-            console.log(respuesta.length);
+            //console.log(aux.length);
+            //console.log(respuesta.length);
 
-            console.log(qx);
-            //console.log(qi+qx);
+            //console.log(qx);
+            console.log(qi+qx);
             qi=qi+qx;
             //qi = aux;
         }
@@ -23323,6 +23329,7 @@ router.route('/regalias/actualizar').get(async (request,response)=>{
     }
     let resu1 = await pool.query(qi);
     response.status(201).json(resu1);
+    //response.status(201).json(qi);
    
 })
 
@@ -23340,6 +23347,40 @@ router.route('/regalias/:usr').get(async (request,response)=>{
     }
     
     response.status(201).json(result);
+   
+})
+
+router.route('/regalias/:usr/fecha/').get(async (request,response)=>{
+    console.log(request.params.usr);
+    console.log(request.query);
+    let q = 'SELECT `a`.`nombre` AS `nombreArtista`, `d`.`UPC`,`d`.`nombre` AS `nombreDisco`,`c`.`ISRC`,`c`.`nombre` AS `nombreCancion`,`re`.`plataforma`,`re`.`clics`,`re`.`ingresos`,`re`.`anio`,`re`.`mes`,`re`.`pais` FROM `sello` AS `s` JOIN `artista` AS `a` ON `s`.`id` = `a`.`sello_id` JOIN `disco` AS `d` ON `d`.`artista_id` = `a`.`id` JOIN `cancion` AS `c` ON `d`.`UPC` = `c`.`disco_UPC` JOIN `regalias` AS `re` ON `re`.`cancion_id` = `c`.`ISRC` WHERE `s`.`usr` = BINARY \'';
+    q = q + request.params.usr + '\'';
+    // and (`re`.`anio`='2021-1' or `re`.`anio`='2020-12' or `re`.`anio`='2020-11')
+    let qi = ' and ('
+    let c = 0;
+    let f = request.query.f;
+    f.forEach(element => {
+        c++;
+        if (c<f.length) {
+            qi = qi + '`re`.`anio`= \''+element+'\' or ';
+        }else {
+            qi = qi + '`re`.`anio`= \''+element+'\')';
+        }
+        
+    });
+    console.log(q);
+    console.log(qi);
+    console.log(" ");
+    console.log(q+qi);
+    var result = await pool.query(q+qi);
+    //console.log(result);
+
+    if (result == []) {
+        console.log("esta vacio");
+    }
+    
+    response.status(201).json(result);
+    //response.status(201).json("si");
    
 })
 
