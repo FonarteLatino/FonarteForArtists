@@ -1,45 +1,51 @@
 <div>
-    <div class="row align-items-center">
-
-        <div class="col-md"></div>
+    <link rel="stylesheet" href="./css/styles.css" crossorigin="anonymous">
+    <!-- Navigation-->
+    <nav class="navbar navbar-expand-lg bg-secondary text-uppercase fixed-top" id="mainNav">
+        <div class="container">
+            <img src="./img/fonarte-logo.png" class="rounded-circle" style="width: 80px; height: 80px;">
+            <p class="navbar-brand js-scroll-trigger" >{{artista}}</p>
             
-            <div class="col-md text-center">
-                <h1>{{artista}}</h1>
-            </div>
-            <div class=" col-md"></div>
-        
-        
-    </div>
-    
-        <div class="row align-items-center">
-            <br>
-            <br>
-            <br>
-            <br>
             <div class="col-md-3 dropdown">
-                
+               
                 <select ng-change="imp()" class="form-control" name="mySelect" id="mySelect" ng-options="option.texto for option in dato.availableOptions track by option.valor" ng-model="dato.selectedOption"></select>
-                
+                    
             </div>
-            <div class="col-md-3"></div>
-            <div ng-if="periodo[0]" class="col-md-6 text-end">
-                <p>Ingresos estimados del periodo: ${{iTotal1M | number:'2'}}MXN</p>
-                <br>
-            </div>
-            <div ng-if="periodo[1]" class="col-md-6 text-end">
-                <p>Ingresos estimados del periodo: ${{iTotal3M | number:'2'}}MXN</p>
-                <br>
-            </div>
-            <div ng-if="periodo[2]" class="col-md-6 text-end">
-                <p>Ingresos estimados del periodo: ${{iTotal6M | number:'2'}}MXN</p>
-                <br>
-            </div>
-            <div ng-if="periodo[3]" class="col-md-6 text-end">
-                <p>Ingresos estimados del periodo: ${{iTotal | number:'2'}}MXN</p>
-                <br>
-            </div>
-            
         </div>
+    </nav>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    
+    <div class="row align-items-center">
+        <br>
+        <br>
+        <br>
+        <br>
+        
+        
+        <div ng-if="periodo[0]" class="col-md-6 text-end">
+            <p>Ingresos estimados del periodo: ${{iTotal1M | number:'2'}}MXN</p>
+            <br>
+        </div>
+        <div ng-if="periodo[1]" class="col-md-6 text-end">
+            <p>Ingresos estimados del periodo: ${{iTotal3M | number:'2'}}MXN</p>
+            <br>
+        </div>
+        <div ng-if="periodo[2]" class="col-md-6 text-end">
+            <p>Ingresos estimados del periodo: ${{iTotal6M | number:'2'}}MXN</p>
+            <br>
+        </div>
+        <div ng-if="periodo[3]" class="col-md-6 text-end">
+            <p>Ingresos estimados del periodo: ${{iTotal | number:'2'}}MXN</p>
+            <br>
+        </div>
+            
+    </div>
     <div ng-show="periodo[0]">
         <div class="row justify-content-cente">
 
@@ -356,5 +362,20 @@
             </div>
         </div>
     </div>
+    
+   
+
+    <!-- Copyright Section-->
+    <div class="copyright py-4 text-center text-white">
+        <div class="container"><small>Copyright © Fonarte Latino 2021</small></div>
+    </div>
+    <!-- Scroll to Top Button (Only visible on small and extra-small screen sizes)-->
+    <div class="scroll-to-top d-lg-none position-fixed">
+        <a class="js-scroll-trigger d-block text-center text-white rounded" href="#page-top"><i class="fa fa-chevron-up"></i></a>
+    </div>
+    <!-- Portfolio Modals-->
+
+    
+    
 </div>
 
