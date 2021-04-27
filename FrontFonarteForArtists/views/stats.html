@@ -6,7 +6,7 @@
             <img src="./img/fonarte-logo.png" class="rounded-circle" style="width: 80px; height: 80px;">
             <p class="navbar-brand js-scroll-trigger" >{{artista}}</p>
             
-            <div class="col-md-3 dropdown">
+            <div class="col-xs-3 dropdown">
                
                 <select ng-change="imp()" class="form-control" name="mySelect" id="mySelect" ng-options="option.texto for option in dato.availableOptions track by option.valor" ng-model="dato.selectedOption"></select>
                     
@@ -30,19 +30,15 @@
         
         <div ng-if="periodo[0]" class="col-md-6 text-end">
             <p>Ingresos estimados del periodo: ${{iTotal1M | number:'2'}}MXN</p>
-            <br>
         </div>
         <div ng-if="periodo[1]" class="col-md-6 text-end">
             <p>Ingresos estimados del periodo: ${{iTotal3M | number:'2'}}MXN</p>
-            <br>
         </div>
         <div ng-if="periodo[2]" class="col-md-6 text-end">
             <p>Ingresos estimados del periodo: ${{iTotal6M | number:'2'}}MXN</p>
-            <br>
         </div>
         <div ng-if="periodo[3]" class="col-md-6 text-end">
             <p>Ingresos estimados del periodo: ${{iTotal | number:'2'}}MXN</p>
-            <br>
         </div>
             
     </div>
@@ -57,17 +53,21 @@
 
             <div class="col-sm-12 col-lg-4">
                 <h4>Top Plataformas</h4>
-                <table class="table">
-                    <tr>
-                        <th>Plataforma</th>
-                        <th>Escuchas</th>
-                        <th>Ingresos estimados</th>
-                    </tr>
-                    <tr ng-repeat="e in plataforma1M | limitTo:7 | orderBy:'-clics'">
-                        <td>{{e.plataforma}}</td>
-                        <td>{{e.clics}}</td>
-                        <td>${{e.ingresos | number:'2'}}MXN</td>
-                    </tr>
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Plataforma</th>
+                            <th>Escuchas</th>
+                            <th>Ingresos estimados</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="e in plataforma1M | limitTo:7 | orderBy:'-clics'">
+                            <td>{{e.plataforma}}</td>
+                            <td>{{e.clics}}</td>
+                            <td>${{e.ingresos | number:'2'}}MXN</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
 
@@ -83,15 +83,19 @@
                 <br>
                 <br>
                 <h4>Top Canciones</h4>
-                <table class="table">
-                    <tr>
-                        <th>Canción</th>
-                        <th>Escuchas</th>
-                    </tr>
-                    <tr ng-repeat="e in cancion1M | limitTo:10 | orderBy:'-clics'">
-                        <td>{{e.nombreCancion}}</td>
-                        <td>{{e.clics}}</td>
-                    </tr>
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Canción</th>
+                            <th>Escuchas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="e in cancion1M | limitTo:10 | orderBy:'-clics'">
+                            <td>{{e.nombreCancion}}</td>
+                            <td>{{e.clics}}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
             
@@ -99,15 +103,19 @@
                 <br>
                 <br>
                 <h4>Top Discos</h4>
-                <table class="table">
-                    <tr>
-                        <th>Disco</th>
-                        <th>Escuchas</th>
-                    </tr>
-                    <tr ng-repeat="e in disco1M | limitTo:5 | orderBy:'-clics'">
-                        <td>{{e.nombreDisco}}</td>
-                        <td>{{e.clics}}</td>
-                    </tr>
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Disco</th>
+                            <th>Escuchas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="e in disco1M | limitTo:5 | orderBy:'-clics'">
+                            <td>{{e.nombreDisco}}</td>
+                            <td>{{e.clics}}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>       
         </div>
@@ -136,17 +144,21 @@
 
             <div class="col-sm-12 col-lg-4">
                 <h4>Top Plataformas</h4>
-                <table class="table">
-                    <tr>
-                        <th>Plataforma</th>
-                        <th>Escuchas</th>
-                        <th>Ingresos estimados</th>
-                    </tr>
-                    <tr ng-repeat="e in plataforma3M | limitTo:7 | orderBy:'-clics'">
-                        <td>{{e.plataforma}}</td>
-                        <td>{{e.clics}}</td>
-                        <td>${{e.ingresos | number:'2'}}MXN</td>
-                    </tr>
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Plataforma</th>
+                            <th>Escuchas</th>
+                            <th>Ingresos estimados</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="e in plataforma3M | limitTo:7 | orderBy:'-clics'">
+                            <td>{{e.plataforma}}</td>
+                            <td>{{e.clics}}</td>
+                            <td>${{e.ingresos | number:'2'}}MXN</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
 
@@ -162,15 +174,19 @@
                 <br>
                 <br>
                 <h4>Top Canciones</h4>
-                <table class="table">
-                    <tr>
-                        <th>Canción</th>
-                        <th>Escuchas</th>
-                    </tr>
-                    <tr ng-repeat="e in cancion3M | limitTo:10 | orderBy:'-clics'">
-                        <td>{{e.nombreCancion}}</td>
-                        <td>{{e.clics}}</td>
-                    </tr>
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Canción</th>
+                            <th>Escuchas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="e in cancion3M | limitTo:10 | orderBy:'-clics'">
+                            <td>{{e.nombreCancion}}</td>
+                            <td>{{e.clics}}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
             
@@ -178,15 +194,19 @@
                 <br>
                 <br>
                 <h4>Top Discos</h4>
-                <table class="table">
-                    <tr>
-                        <th>Disco</th>
-                        <th>Escuchas</th>
-                    </tr>
-                    <tr ng-repeat="e in disco3M | limitTo:5 | orderBy:'-clics'">
-                        <td>{{e.nombreDisco}}</td>
-                        <td>{{e.clics}}</td>
-                    </tr>
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Disco</th>
+                            <th>Escuchas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="e in disco3M | limitTo:5 | orderBy:'-clics'">
+                            <td>{{e.nombreDisco}}</td>
+                            <td>{{e.clics}}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>       
         </div>
@@ -215,17 +235,21 @@
 
             <div class="col-sm-12 col-lg-4">
                 <h4>Top Plataformas</h4>
-                <table class="table">
-                    <tr>
-                        <th>Plataforma</th>
-                        <th>Escuchas</th>
-                        <th>Ingresos estimados</th>
-                    </tr>
-                    <tr ng-repeat="e in plataforma6M | limitTo:7 | orderBy:'-clics'">
-                        <td>{{e.plataforma}}</td>
-                        <td>{{e.clics}}</td>
-                        <td>${{e.ingresos | number:'2'}}MXN</td>
-                    </tr>
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Plataforma</th>
+                            <th>Escuchas</th>
+                            <th>Ingresos estimados</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="e in plataforma6M | limitTo:7 | orderBy:'-clics'">
+                            <td>{{e.plataforma}}</td>
+                            <td>{{e.clics}}</td>
+                            <td>${{e.ingresos | number:'2'}}MXN</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
 
@@ -241,15 +265,19 @@
                 <br>
                 <br>
                 <h4>Top Canciones</h4>
-                <table class="table">
-                    <tr>
-                        <th>Canción</th>
-                        <th>Escuchas</th>
-                    </tr>
-                    <tr ng-repeat="e in cancion6M | limitTo:10 | orderBy:'-clics'">
-                        <td>{{e.nombreCancion}}</td>
-                        <td>{{e.clics}}</td>
-                    </tr>
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Canción</th>
+                            <th>Escuchas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="e in cancion6M | limitTo:10 | orderBy:'-clics'">
+                            <td>{{e.nombreCancion}}</td>
+                            <td>{{e.clics}}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
             
@@ -257,15 +285,19 @@
                 <br>
                 <br>
                 <h4>Top Discos</h4>
-                <table class="table">
-                    <tr>
-                        <th>Disco</th>
-                        <th>Escuchas</th>
-                    </tr>
-                    <tr ng-repeat="e in disco6M | limitTo:5 | orderBy:'-clics'">
-                        <td>{{e.nombreDisco}}</td>
-                        <td>{{e.clics}}</td>
-                    </tr>
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Disco</th>
+                            <th>Escuchas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="e in disco6M | limitTo:5 | orderBy:'-clics'">
+                            <td>{{e.nombreDisco}}</td>
+                            <td>{{e.clics}}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>       
         </div>
@@ -286,25 +318,29 @@
     <div ng-show="periodo[3]">
         <div class="row justify-content-cente">
 
-            <div class="col-sm-12 col-lg-8">
+            <div class="col-sm-12 col-lg-7">
                 <h4>Ingresos por plataforma</h4>
                 <br><br>
                 <canvas style="width: 100%; height: 100%" class="chart chart-pie" chart-data="datos" chart-labels="etiquetas"></canvas>
             </div>
 
-            <div class="col-sm-12 col-lg-4">
+            <div class="col-sm-12 col-lg-5">
                 <h4>Top Plataformas</h4>
-                <table class="table">
-                    <tr>
-                        <th>Plataforma</th>
-                        <th>Escuchas</th>
-                        <th>Ingresos estimados</th>
-                    </tr>
-                    <tr ng-repeat="e in plataforma | limitTo:7 | orderBy:'-clics'">
-                        <td>{{e.plataforma}}</td>
-                        <td>{{e.clics}}</td>
-                        <td>${{e.ingresos | number:'2'}}MXN</td>
-                    </tr>
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Plataforma</th>
+                            <th>Escuchas</th>
+                            <th>Ingresos estimados</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="e in plataforma | limitTo:7 | orderBy:'-clics'">
+                            <td>{{e.plataforma}}</td>
+                            <td>{{e.clics}}</td>
+                            <td>${{e.ingresos | number:'2'}}MXN</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
 
@@ -320,15 +356,19 @@
                 <br>
                 <br>
                 <h4>Top Canciones</h4>
-                <table class="table">
-                    <tr>
-                        <th>Canción</th>
-                        <th>Escuchas</th>
-                    </tr>
-                    <tr ng-repeat="e in cancion | limitTo:10 | orderBy:'-clics'">
-                        <td>{{e.nombreCancion}}</td>
-                        <td>{{e.clics}}</td>
-                    </tr>
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Canción</th>
+                            <th>Escuchas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="e in cancion | limitTo:10 | orderBy:'-clics'">
+                            <td>{{e.nombreCancion}}</td>
+                            <td>{{e.clics}}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
             
@@ -336,15 +376,19 @@
                 <br>
                 <br>
                 <h4>Top Discos</h4>
-                <table class="table">
-                    <tr>
-                        <th>Disco</th>
-                        <th>Escuchas</th>
-                    </tr>
-                    <tr ng-repeat="e in disco | limitTo:5 | orderBy:'-clics'">
-                        <td>{{e.nombreDisco}}</td>
-                        <td>{{e.clics}}</td>
-                    </tr>
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Disco</th>
+                            <th>Escuchas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="e in disco | limitTo:5 | orderBy:'-clics'">
+                            <td>{{e.nombreDisco}}</td>
+                            <td>{{e.clics}}</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>       
         </div>
@@ -358,8 +402,6 @@
                 
             </div>
             
-                
-            </div>
         </div>
     </div>
     

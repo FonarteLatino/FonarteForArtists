@@ -13,19 +13,22 @@ app.config(function($routeProvider) {
 });
 app.controller("primero", ['$scope','$rootScope','$http','$location',function($scope,$rootScope,$http,$location){
    
-   $rootScope.usr = 'Sonalli';
-   console.log($rootScope.usr);
-   if ($rootScope.usr == undefined||"") {
-      console.log("indefinido");
+   //$rootScope.usr = 'Diego';
+   //console.log($rootScope.usr);
+   //sessionStorage.clear();
+   let token = sessionStorage.getItem('token');
+   console.log(token);
+   /*sessionStorage.setItem('token', 'Miguel Antonio')
+   token = sessionStorage.getItem('token');*/
+   
+   if (token === null) {
+      console.log("no existe el token");
       $location.path('/');
-      console.log('Claro');
+      
    }else {
-      console.log($rootScope.usr);
+      console.log("Si tenemos token");
+      console.log(token);
       $location.path('/main');
    }
-	//$scope.nombre = "Oto";
-   //$scope.categoria = $rootScope.categoria;
-   ////console.log($rootScope.folio);
-   //$scope.folio = $rootScope.folio;
 }]);
 

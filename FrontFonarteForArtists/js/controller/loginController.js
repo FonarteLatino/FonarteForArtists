@@ -1,39 +1,46 @@
 app.controller("formulario",['$scope','$rootScope','$http','$window','$location',function($scope,$rootScope,$http,$window,$location){
   $rootScope.usr = "";
-    $scope.usr = "";
+  $rootScope.usuario = "";
+  $scope.usr = "";
+  $rootScope.psw = "";
+  $scope.psw = "";
     
-    $scope.consultar = function(){
-        console.log("Holiiiiii");
-        console.log($scope.usr)
+  $scope.consultar = function(){
+    console.log("Holiiiiii");
+    console.log($scope.usr)
         
-        var req = {
-            method : "GET" ,
-            url :  "http://localhost:8091/api/sello/"+$scope.usr , 
-            data: {}
-          };
-          console.log(req);
-          $http(req).then(function (response) {//'response' es el objeto que devuelve el servicio web
-            console.log(response);
-            console.log(response.data.length);
-            console.log(response.data[0]);
-            //console.log(response.data[0].usr);
-            
-            if (response.data.length > 0) {
-              console.log(response.data[0].usr);
-              $rootScope.usr=response.data[0].usr;
-              console.log($rootScope.usr);
-              console.log($location.path())
-              $location.path('/main');
-            }else {
-              console.log('El usuario No se encuentra');  
-              $window.location.href = '#';
-            }
-
-          }, function (response) {
-            console.log('El usuario No se encuentra');
-            $window.location.href = '#';
-          });
+    var req = {
+      method : "POST" ,
+      url :  "http://localhost:8091/api/login" , 
+      data: {
+        "usr":$scope.usr,
+        "psw":$scope.psw
+      }
     };
+    /*var req = {
+      method : "GET" ,
+      url : "http://localhost:8091/api/sello/"+$scope.usr, 
+      data: {}
+    };*/
+    console.log(req);
+    $http(req).then(function (response) {//'response' es el objeto que devuelve el servicio web
+      console.log(response);
+      console.log(response.data);
+      sessionStorage.setItem('token', response.data.token);
+      sessionStorage.setItem('usr', response.data.usuario.usr);
+      //$rootScope.usuario = response.data.usuario;
+      console.log(response.data.usuario);
+      console.log($location.path());
+      console.log(sessionStorage.getItem('token'));
+      $location.path('/main');
+      
+    }, function (response) {
+      console.log(response);
+      console.log(response.data);
+      console.log('El usuario No se encuentra');
+      $window.location.href = '#';
+    });
+  };
 
     /*var mapa = function(){
       //console.log($scope.mapa);
