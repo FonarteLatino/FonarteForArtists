@@ -1,21 +1,32 @@
 {
-  "name": "nodejs-console-app1",
-  "version": "0.0.0",
-  "description": "NodejsConsoleApp1",
+  "name": "ApiRestFonarte",
+  "version": "1.0.0",
+  "description": "",
   "main": "app.js",
-  "author": {
-    "name": ""
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "devStart": "nodemon app.js"
   },
   "dependencies": {
-    "axios": "^0.20.0",
-    "express": "^4.17.1",
-    "hbs": "^4.1.1",
+    "axios": "0.21.1",
+    "bcryptjs": "^2.4.3",
+    "body-parsec": "3.0.0",
+    "cors": "2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "4.17.1",
+    "helmet": "^4.5.0",
     "https": "^1.0.0",
-    "lodash": "^4.17.20",
-    "node-fetch": "^2.6.1",
-    "nodemon": "^2.0.5",
-    "pug": "^3.0.0",
-    "tedious": "^9.2.1",
-    "yargs": "^16.0.3"
-  }
+    "jsonwebtoken": "^8.5.1",
+    "morgan": "^1.10.0",
+    "mssql": "6.3.1",
+    "mysql": "2.18.1",
+    "replaceall": "0.1.6"
+  },
+  "devDependencies": {
+    "nodemon": "2.0.7"
+  },
+  "keywords": [],
+  "author": "Allan Ibarra",
+  "license": "ISC"
 }

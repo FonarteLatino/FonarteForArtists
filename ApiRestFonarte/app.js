@@ -1,41 +1,68 @@
-var createError = require('http-errors');
+const dboperations = require('./modulos/dboperations');
+const exOperations = require('./modulos/externalOperations');
+const procesar = require('./modulos/procesamiento');
+
+//var conection = require('./links');
+var remplaced = require('replaceall');
+
 var express = require('express');
-var path = require('path');
-//var cookieParser = require('cookie-parser');
-//var logger = require('morgan');
-
-var indexRouter = require('./routes/index');
-//var usersRouter = require('./routes/users');
-
+const jwt = require("jsonwebtoken");
+var axios = require('axios');
+var bodyParser = require('body-parser');
+var cors = require('cors');
 var app = express();
+var router = express.Router();
 
-// view engine setup
-//app.set('views', path.join(__dirname, 'views'));
-//app.set('view engine', 'pug');
+const { request } = require('https');
+const { response } = require('express');
+const crypto = require('bcryptjs');
 
-//app.use(logger('dev'));
-//app.use(express.json());
-//app.use(express.urlencoded({ extended: false }));
-//app.use(cookieParser());
-//app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.json());
+app.use(cors());
+app.use('/api',router);
 
-//app.use('/', indexRouter);
-//app.use('/users', usersRouter);
-
-// catch 404 and forward to error handler
-/*app.use(function(req, res, next) {
-  next(createError(404));
+router.use((request,response,next)=>{
+  console.log('middleware');
+  next(); 
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+router.route('/').get(async (request,response)=>{
+  response.json({
+      mensaje: "Nodejs y JWT"
+  });
+});
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});*/
+router.route('/actualizar/artistas').get(async (request,response)=>{
+  await procesar.actualizarArtistas();
+    
+  response.status(201).json("Se actualizaron los artistas exitosamente");
+})
 
-module.exports = app;
+router.route('/actualizar/discos').get(async (request,response)=>{
+  await procesar.actualizarDiscos();
+  response.status(201).json("Se actualizaron los discos exitosamente");
+});
+
+router.route('/actualizar/canciones').get(async (request,response)=>{
+  let r = await procesar.actualizarCanciones();
+  console.log(r);
+  if (!r) {
+    response.status(400).json("Existe un error de conexion");  
+  }
+  response.status(201).json("Se actualizaron las canciones exitosamente");
+});
+
+router.route('/actualizar/regalias').get(async (request,response)=>{
+  let r = await procesar.actualizarRegalias();
+  console.log(r);
+  if (!r) {
+    response.status(400).json("Existe un error de conexion");  
+  }
+  response.status(201).json("Se actualizaron las regalias exitosamente");
+});
+
+var port = process.env.PORT ||8090;
+app.listen(port);
+console.log('Order API is rinning at '+ port);
+

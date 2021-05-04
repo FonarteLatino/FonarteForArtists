@@ -27,8 +27,6 @@ router.use((request,response,next)=>{
 });
 
 router.route('/').get(async (request,response)=>{
-    console.log("linea 30");
-    console.log(conection.api_Master);
     response.json({
         mensaje: "Nodejs y JWT"
     });
