@@ -257,7 +257,7 @@ async function actualizarCanciones(){
 
 }
 
-async function actualizarRegalias(){
+function calculoFechas(){
     //Calculamaos las fechas vigentes para el reporte
     var resta = 1000 * 60 * 60 * 24;
     var now= new Date();
@@ -285,8 +285,24 @@ async function actualizarRegalias(){
         }  
     }
     //console.log(f);
+    return f;
+}
+
+async function actualizarRegalias(){
+    var f = calculoFechas();
+    var eliminar = [];
+    var insertar = [];
+    console.log(f);
     let fechasLocal = await dboperations.fechas();
     //console.log(fechasLocal);
+    for (const itera of fechasLocal) {
+        //console.log(itera);
+        let a = f.find(fech => fech.fecha == itera.anio);
+        if(a == undefined){
+            console.log(itera);
+            eliminar.push(itera.anio);
+        }
+    }
     for (const iterator of f) {
         //console.log(iterator);
         let a = fechasLocal.find(fech => fech.anio == iterator.fecha);
@@ -297,9 +313,28 @@ async function actualizarRegalias(){
     return 1;
 }
 
+async function asignarDiscos(body){
+    console.log(body.sello_id);
+    console.log(body.UPC);
+    c=0;
+    let q = 'INSERT INTO `sello_disco`(`id_sello`, `UPC`) VALUES (';
+    for (const iterator of body.UPC) {
+        c++;
+        if (c<body.UPC.length) {
+            q = q + body.sello_id + ',' + iterator + '),(';
+        }else {
+            q = q + body.sello_id + ',' + iterator + ')';
+        }
+    }
+    console.log(q);
+    await dboperations.ejecutarQuery(q);
+    return 1;
+}
+
 module.exports = {
     actualizarArtistas : actualizarArtistas,
     actualizarDiscos : actualizarDiscos,
     actualizarCanciones : actualizarCanciones,
-    actualizarRegalias : actualizarRegalias
+    actualizarRegalias : actualizarRegalias,
+    asignarDiscos : asignarDiscos
 }

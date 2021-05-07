@@ -62,6 +62,15 @@ router.route('/actualizar/regalias').get(async (request,response)=>{
   response.status(201).json("Se actualizaron las regalias exitosamente");
 });
 
+router.route('/altadiscos').post(async (request,response)=>{
+  //console.log(request.body);
+  let r = await procesar.asignarDiscos(request.body);
+  if (!r) {
+    response.status(400).json("Existe un error de conexion");  
+  }
+  response.status(201).json("Se dieron de alta los discos para el sello de manera exitosa");
+});
+
 var port = process.env.PORT ||8090;
 app.listen(port);
 console.log('Order API is rinning at '+ port);
