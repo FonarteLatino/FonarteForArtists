@@ -3,10 +3,15 @@ const pool = require('../config/dbconexionmysql');
 //llama a todos los Artistas de la base de datos
 async function artistas(){
   let a = 'SELECT * FROM `artista`'
-  var result = await pool.query(a);
-  //console.log(result);
-  //console.log(result.length);
-  return result;
+  try{
+    var result = await pool.query(a);
+    return result;
+  }
+  catch(error){
+    console.log(error);
+        console.log("Problemas de conexion interna")
+        return 0;
+  }  
 }
 
 async function artista(ar){
@@ -28,26 +33,41 @@ async function ejecutar(q){
 
 async function discos(){
   let a = 'SELECT `a`.`nombre` AS `ARTIST`,`d`.`UPC`,`d`.`nombre`,`d`.`artista_id` FROM `artista` AS `a` JOIN `disco` AS `d` ON `d`.`artista_id` = `a`.`id`'
-  var result = await pool.query(a);
-  //console.log(result);
-  //console.log(result.length);
-  return result;
+  try{
+    var result = await pool.query(a);
+    return result;
+  }
+  catch(error){
+    console.log(error);
+    console.log("Problemas de conexion interna")
+    return 0;
+  }
 }
 
 async function canciones(){
   let a = 'SELECT * FROM `cancion`'
-  var result = await pool.query(a);
-  //console.log(result);
-  //console.log(result.length);
-  return result;
+  try{
+    var result = await pool.query(a);
+    return result;
+  }
+  catch(error){
+    console.log(error);
+    console.log("Problemas de conexion interna")
+    return 0;
+  }
 }
 
 async function fecha(){
   let a = 'SELECT DISTINCT `anio` FROM `regalias`';
-  var result = await pool.query(a);
-  //console.log(result);
-  //console.log(result.length);
-  return result;
+  try{
+    var result = await pool.query(a);
+    return result;
+  }
+  catch(error){
+    console.log(error);
+    console.log("Problemas de conexion interna")
+    return 0;
+  }
 }
 
 module.exports = {

@@ -9,6 +9,7 @@ async function artistas(){
     }
     catch(error){
         console.log(error);
+        console.log("Problemas de conexion externa")
         return 0;
     }
 }

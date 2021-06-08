@@ -34,14 +34,22 @@ router.route('/').get(async (request,response)=>{
 });
 
 router.route('/actualizar/artistas').get(async (request,response)=>{
-  await procesar.actualizarArtistas();
-    
-  response.status(201).json("Se actualizaron los artistas exitosamente");
+  let res = await procesar.actualizarArtistas();
+  //console.log(res);
+  if (!res) {
+    response.status(400).json("Problemas de conexion con las bases de datos");
+  }else{
+    response.status(201).json("Se actualizaron los artistas exitosamente");
+  }
 })
 
 router.route('/actualizar/discos').get(async (request,response)=>{
-  await procesar.actualizarDiscos();
-  response.status(201).json("Se actualizaron los discos exitosamente");
+  let res = await procesar.actualizarDiscos();
+  if (!res) {
+    response.status(400).json("Problemas de conexion con las bases de datos");
+  }else{
+    response.status(201).json("Se actualizaron los discos exitosamente");
+  }
 });
 
 router.route('/actualizar/canciones').get(async (request,response)=>{
@@ -49,8 +57,9 @@ router.route('/actualizar/canciones').get(async (request,response)=>{
   console.log(r);
   if (!r) {
     response.status(400).json("Existe un error de conexion");  
+  }else{
+    response.status(201).json("Se actualizaron las canciones exitosamente");
   }
-  response.status(201).json("Se actualizaron las canciones exitosamente");
 });
 
 router.route('/actualizar/regalias').get(async (request,response)=>{
@@ -58,8 +67,9 @@ router.route('/actualizar/regalias').get(async (request,response)=>{
   console.log(r);
   if (!r) {
     response.status(400).json("Existe un error de conexion");  
+  }else {
+    response.status(201).json("Se actualizaron las regalias exitosamente");
   }
-  response.status(201).json("Se actualizaron las regalias exitosamente");
 });
 
 router.route('/altadiscos').post(async (request,response)=>{

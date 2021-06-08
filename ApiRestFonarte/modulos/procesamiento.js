@@ -4,9 +4,13 @@ const exOperations = require('./externalOperations');
 async function actualizarArtistas(){
     //llamada a al base de datos general para recuperar todos los artistas
     let artistasEx = await exOperations.artistasEx();
+    if (!artistasEx){
+        console.log("no se pudo hacer")
+        return 0;
+    }
     //recuperar los artistas de la base de datos local
     let artistas = await dboperations.artistasLocal();
-    if (!artistasEx){
+    if (!artistas){
         console.log("no se pudo hacer")
         return 0;
     }
@@ -85,6 +89,10 @@ async function actualizarDiscos(){
     }
     //recuperar los discos de la base de datos local
     let discos = await dboperations.discosLocal();
+    if (!discos){
+        console.log("no se pudo hacer")
+        return 0;
+    }
     console.log(discos);
     let insertar = [];
     let eliminar = [];
@@ -181,6 +189,10 @@ async function actualizarCanciones(){
     }
     //recuperar los canciones de la base de datos local
     let canciones = await dboperations.cancionesLocal();
+    if (!canciones){
+        console.log("no se pudo hacer")
+        return 0;
+    }
     //console.log(canciones);
     let insertar = [];
     let eliminar = [];
@@ -294,6 +306,10 @@ async function actualizarRegalias(){
     var insertar = [];
     console.log(f);
     let fechasLocal = await dboperations.fechas();
+    if (!fechasLocal){
+        console.log("no se pudo hacer")
+        return 0;
+    }
     //console.log(fechasLocal);
     for (const itera of fechasLocal) {
         //console.log(itera);
