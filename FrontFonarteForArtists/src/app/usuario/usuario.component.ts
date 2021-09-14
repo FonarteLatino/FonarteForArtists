@@ -7,6 +7,13 @@ import { Component, OnInit } from '@angular/core';
 })
 export class UsuarioComponent implements OnInit {
 
+  nombre = "Allan";
+  private numero = 20;
+
+  getNumero(){
+    return this.numero;
+  }
+
   constructor() { }
 
   ngOnInit(): void {
