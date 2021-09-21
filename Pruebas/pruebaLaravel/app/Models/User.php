@@ -58,4 +58,9 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+
+    //Relacion 1 a 1
+    public function sello(){
+        return $this->hasOne('App\Models\sello');
+    }
 }
