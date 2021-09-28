@@ -78,6 +78,18 @@ return [
             'sslmode' => 'prefer',
         ],
 
+        /*'sqlsrv' => [
+            'driver' => 'sqlsrv',
+            'url' => env('fonarte2.database.windows.net'),
+            'host' => env('DB_HOST', 'fonarte2.database.windows.net'),
+            'port' => env('DB_PORT', '1433'),
+            'database' => env('Reporteador', 'forge'),
+            'username' => env('Dataguys2', 'forge'),
+            'password' => env('Fonarte2018', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],*/
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DATABASE_URL'),
