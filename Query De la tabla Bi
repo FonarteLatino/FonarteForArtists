@@ -1,0 +1,145 @@
+Query De la tabla Base_Total
+-------------------------------------------------------------
+
+WITH CTE AS ( 
+	SELECT ISRC, 
+			MAX(RELEASE_DATE) AS [RELEASE_DATE],
+			MAX(UPC) AS [UPC]
+	FROM [dbo].[BBDD_FINAL_CANCIONES]
+	GROUP BY ISRC
+),
+CTE2 AS (
+	SELECT SONGS.*
+	FROM CTE
+	INNER JOIN [dbo].[BBDD_FINAL_CANCIONES] AS SONGS
+		ON CTE.ISRC = SONGS.ISRC AND CTE.RELEASE_DATE = SONGS.RELEASE_DATE AND CTE.UPC = SONGS.UPC
+
+	UNION
+
+	SELECT [UPC]
+			,[ALBUM_ID]
+			,[ARTIST]
+			,[ALBUM_NAME]
+			,NULL AS [TRACK_NUMBER]
+			,[UPC] AS [ISRC]
+			,NULL AS [TRACK_NAME]
+			,[GENRE]
+			,[SELLO]
+			,[LABEL]
+			,[COPYRIGHT_YEAR]
+			,[RELEASE_DATE]
+	FROM [dbo].[BBDD_FINAL_CANCIONES]
+	GROUP BY [UPC], [ALBUM_ID], [ARTIST], [ALBUM_NAME], [GENRE], [SELLO], [LABEL], [COPYRIGHT_YEAR], [RELEASE_DATE]
+)
+
+SELECT FINAL.*
+FROM (
+	SELECT * FROM CTE2
+
+	UNION
+
+	SELECT   [UPC]
+			,[VIDEO_ID] AS [ALBUM_ID]
+			,[ARTIST]
+			,[TITLE_ALBUM] AS [ALBUM_NAME]
+			,NULL AS [TRACK_NUMBER]
+			,[ISRC]
+			,[TITLE_VIDEO] AS [TRACK_NAME]
+			,'VIDEO' AS [GENRE]
+			,NULL AS [SELLO]
+			,NULL AS [LABEL]
+			,NULL AS [COPYRIGHT_YEAR]
+			,NULL AS [RELEASE_DATE]
+	FROM [dbo].[BBDD_FINAL_VIDEOS]
+	WHERE ISRC NOT IN (
+		SELECT ISRC FROM CTE2
+	)
+
+) FINAL
+WHERE ISRC NOT IN (
+ '191018096595'
+) and ARTIST like 'Carlos Mac%' or ARTIST like 'Cristian C%'
+
+
+-------------------------------------------------------------------
+Query De la tabla Videos_Albums_Final
+-------------------------------------------------------------
+  SELECT [UPC]
+        ,[ARTIST]
+        ,[TITLE_ALBUM]
+  FROM [dbo].[BBDD_FINAL_VIDEOS]
+  GROUP BY [UPC],[ARTIST],[TITLE_ALBUM]
+
+--------------------------------------------------------
+Query De la tabla Videos_Final
+-------------------------------------------------------------
+SELECT [UPC]
+      ,[ISRC]
+      ,[VIDEO_ID]
+      ,[ARTIST]
+      ,[TITLE_ALBUM]
+      ,[TITLE_VIDEO]
+  FROM [dbo].[BBDD_FINAL_VIDEOS]
+  GROUP BY [UPC],[ISRC],[VIDEO_ID],[ARTIST],[TITLE_ALBUM],[TITLE_VIDEO]
+
+--------------------------------------------------------
+Query De la tabla Apple_Music
+-------------------------------------------------------------
+WITH aMusic AS (
+	SELECT *,
+		CONCAT(Anio,'_',Mes,'_',Currency) AS [Currency_ID]
+	FROM [dbo].[APPLEMUSIC]
+),
+appC AS (
+	SELECT Divisa,
+		   Mes,
+		   Anio,
+		   MAX(Tipo_de_cambio) AS [Tipo_de_cambio],
+		   CONCAT(Anio,'_',Mes,'_',Divisa) AS [Currency_ID]
+	FROM [dbo].[APPLE_CURRENCY]
+	GROUP BY Divisa, Mes, Anio
+)
+SELECT aMusic.*,
+       appC.Tipo_de_cambio
+FROM aMusic
+LEFT JOIN appC
+	ON aMusic.Currency_ID=appC.Currency_ID;
+
+
+--------------------------------------------------------
+Query De la tabla Itunes
+-------------------------------------------------------------
+WITH itunes AS (
+	SELECT *,
+	    CASE
+			WHEN UPC=Vendor_Identifier THEN 'ALBUM'
+			ELSE 'SONG'
+		END AS [Product_Type],
+		CONCAT(Anio,'_',Mes,'_',Partner_Share_Currency) AS [Currency_ID]
+	FROM [dbo].[ITUNES]
+),
+appC AS (
+	SELECT Divisa,
+		   Mes,
+		   Anio,
+		   MAX(Tipo_de_cambio) AS [Tipo_de_cambio],
+		   CONCAT(Anio,'_',Mes,'_',Divisa) AS [Currency_ID]
+	FROM [dbo].[APPLE_CURRENCY]
+	GROUP BY Divisa, Mes, Anio
+)
+SELECT itunes.*,
+       appC.Tipo_de_cambio
+FROM itunes
+LEFT JOIN appC
+	ON itunes.Currency_ID=appC.Currency_ID
+--------------------------------------------------------
+Query De la tabla Orchard
+-------------------------------------------------------------
+SELECT *,
+   CASE 
+      WHEN Orchard_UPC=ISRC THEN 'ALBUM' 
+       ELSE 'SONG'
+   END AS [Product_Type]
+FROM [dbo].[ORCHARD]
+
+
