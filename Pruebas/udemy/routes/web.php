@@ -18,3 +18,11 @@ Route::get('/', HomeController::class)->name('home');
 Route::middleware(['auth:sanctum', 'verified'])->get('/dashboard', function () {
     return view('dashboard');
 })->name('dashboard');
+
+Route::get('cursos',function(){
+    return "Aqui va la lista de lo que sea que quieras poner en esta pagina en blanco Yo no quiero ya teclear estoy arto de la compu hoy prefiero jaranear espero suceda pronto";
+})->name('cursos.index');
+
+Route::get('cursos/{course}',function($course){
+    return "Aqui va la info con los datos que yo llamo que se sacan de la base con las manos lo reclamo son los cursos y una clase";
+})->name('course.show');

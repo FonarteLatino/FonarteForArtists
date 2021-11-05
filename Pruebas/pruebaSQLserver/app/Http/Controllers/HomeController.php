@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use SebastianBergmann\Environment\Console;
 
 class HomeController extends Controller
 {
     public function __invoke()
     {
-        $sql = 'SELECT TOP (1000) [Year_Month]
+        $sql = 'SELECT [Year_Month]
         ,[Service]
         ,[Retailer]
         ,[Product_Type]
@@ -24,8 +25,12 @@ class HomeController extends Controller
         ,[Currency_ID]
         ,[Tipo_de_cambio]
     FROM [dbo].[000_Client_Dashboard_Total]';
-        $products = DB::select($sql);
-        return $products;
+        //sqlsrv_connect();
+        //$products = DB::connection("sqlsrv")->select($sql);
+        
+        //$products = DB::connection("sqlsrv")->table('dbo.000_Client_Dashboard_Total')->where('UPC', '7509841216319');
+        //dd($products);
+        //return $products;
         return view('welcome');
     }
 }
