@@ -491,12 +491,7 @@ Antes de mergear cualquier cambio que toque datos, verifica:
 - [ ] **Los totales cuadran con Power BI** para al menos 3 artistas de prueba
       (catálogo grande, mediano y con videos).
 
-### 🔴 Pendiente urgente
 
-El usuario `Dataguys2` de Azure SQL tenía su contraseña **en texto plano** dentro del
-repositorio (`legacy/nodejsapi/dbconfig.js`, hoy ya no trackeado). La contraseña
-**sigue en el historial de git**: debe considerarse comprometida y **rotarse**.
-Ver [`docs/fase0_hallazgos.md`](./docs/fase0_hallazgos.md) §6.
 
 ---
 
