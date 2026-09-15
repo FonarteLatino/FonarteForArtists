@@ -15,23 +15,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import {
   TipoEntidadPermiso,
   EfectoPermiso,
-  ConcesionAcceso,
-} from '@prisma/client';
+  SolicitudPermiso,
+  ResultadoPermiso,
+} from './permissions.types';
 
-export interface SolicitudPermiso {
-  usuarioId: number;
-  tipoEntidad: TipoEntidadPermiso;
-  entidadId: number;
-  /** IDs de los niveles superiores (de más específico a más general) */
-  jerarquiaSuperior?: Array<{ tipo: TipoEntidadPermiso; id: number }>;
-}
-
-export interface ResultadoPermiso {
-  permitido: boolean;
-  nivel: TipoEntidadPermiso | null;  // Nivel donde se resolvió el permiso
-  efecto: EfectoPermiso | null;
-  motivo: string;
-}
+export { TipoEntidadPermiso, EfectoPermiso, SolicitudPermiso, ResultadoPermiso };
 
 @Injectable()
 export class PermissionsService {
@@ -50,16 +38,16 @@ export class PermissionsService {
     const { usuarioId, tipoEntidad, entidadId, jerarquiaSuperior = [] } = solicitud;
 
     // Cargar todas las concesiones vigentes del usuario (no revocadas)
-    const concesiones = await this.prisma.concesionAcceso.findMany({
+    const concesiones = await (this.prisma as any).concesionAcceso.findMany({
       where: {
         usuarioId,
-        revocadoEn: null,  // Solo concesiones activas
+        revocadoEn: null, // Solo concesiones activas
       },
     });
 
     // Paso 1: Buscar concesión explícita al nivel exacto solicitado
     const concesionExacta = concesiones.find(
-      (c) => c.tipoEntidad === tipoEntidad && c.entidadId === entidadId,
+      (c: any) => c.tipoEntidad === tipoEntidad && c.entidadId === entidadId,
     );
 
     if (concesionExacta) {
@@ -84,12 +72,12 @@ export class PermissionsService {
     // jerarquiaSuperior viene ordenado: [ARTISTA, SELLO] (de más cercano a más lejano)
     for (const nivel of jerarquiaSuperior) {
       const concesionNivel = concesiones.find(
-        (c) => c.tipoEntidad === nivel.tipo && c.entidadId === nivel.id,
+        (c: any) => c.tipoEntidad === nivel.tipo && c.entidadId === nivel.id,
       );
 
       if (concesionNivel) {
         if (concesionNivel.efecto === EfectoPermiso.DENY) {
-          // DENY en nivel superior se propaga hacia abajo (a menos que haya ALLOW explícito más específico, ya comprobado)
+          // DENY en nivel superior se propaga hacia abajo
           return {
             permitido: false,
             nivel: nivel.tipo,
@@ -124,7 +112,7 @@ export class PermissionsService {
     usuarioId: number,
     tipoEntidad: TipoEntidadPermiso,
   ): Promise<number[]> {
-    const concesiones = await this.prisma.concesionAcceso.findMany({
+    const concesiones = await (this.prisma as any).concesionAcceso.findMany({
       where: {
         usuarioId,
         tipoEntidad,
@@ -134,7 +122,7 @@ export class PermissionsService {
     });
 
     // Filtrar entidades con DENY explícito al mismo nivel
-    const denies = await this.prisma.concesionAcceso.findMany({
+    const denies = await (this.prisma as any).concesionAcceso.findMany({
       where: {
         usuarioId,
         tipoEntidad,
@@ -143,10 +131,10 @@ export class PermissionsService {
       },
     });
 
-    const denyIds = new Set(denies.map((d) => d.entidadId));
+    const denyIds = new Set(denies.map((d: any) => d.entidadId));
 
     return concesiones
-      .filter((c) => !denyIds.has(c.entidadId))
-      .map((c) => c.entidadId);
+      .filter((c: any) => !denyIds.has(c.entidadId))
+      .map((c: any) => c.entidadId);
   }
 }

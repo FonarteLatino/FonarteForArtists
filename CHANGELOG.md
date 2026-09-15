@@ -10,8 +10,142 @@ y este proyecto sigue [Versionado Semántico](https://semver.org/lang/es/).
 ## [Unreleased]
 
 > Trabajo en progreso según el [Implementation Plan](./implementation_plan.md).
-> Cubre la auditoría de Fase 0, la capa de datos de Fase 1 (vistas SQL sin escribir aún
-> en Azure) y el inicio de la Fase 2 (esquema de permisos y resolución de accesos).
+> Siguiente hito: **Fase 4 — Panel de Administración (Frontend Next.js)** y **Fase 5 — Portal del Artista (Frontend con Gráficas y Mapa)**.
+
+---
+
+## [0.3.0] — 2026-09-15 — Fase 3 completada (API Backend NestJS)
+
+Implementación completa de la **Fase 3** del [Implementation Plan](./implementation_plan.md): endpoints de estadísticas de solo lectura contra las 7 vistas SQL de la Fase 1, motor de base de datos de solo lectura para `fonarte2`, defensa en profundidad sin exposición de columnas monetarias, módulo de administración completa (Sellos, Artistas, Catálogo, Usuarios, Concesiones de Acceso), módulo de auditoría de seguridad y rate limiting global con Throttler.
+
+### Añadido
+
+#### Módulo de Estadísticas (`StatsModule`)
+- **`backend/src/stats/fonarte2.service.ts`** — servicio de conexión a la base `fonarte2` (`Reporteador` en Azure SQL) en modo estricto de solo lectura mediante `mssql` Connection Pool. Valida que únicamente se ejecuten consultas `SELECT` y soporta modo desacoplado para desarrollo local.
+- **`backend/src/stats/dto/stats-responses.dto.ts`** — contratos y DTOs de salida fuertemente tipados con **defensa en profundidad**: ninguna propiedad financiera (regalías, montos, pagos) existe en los DTOs, exponiendo únicamente métricas de streams, conteos y metadatos de catálogo.
+- **`backend/src/stats/dto/stats-filtro.dto.ts`** — DTO con validación de parámetros de consulta (`periodoInicio`, `periodoFin`, `plataforma`, `pais`) en formato estándar `YYYY-MM`.
+- **`backend/src/stats/stats.service.ts`** — lógica de negocio de estadísticas:
+  - `getKpi()`: resumen para tarjetas KPI (streams totales, streams periodo actual, plataformas activas, top plataforma).
+  - `getStreamsPorCancion()`: streams por canción (ISRC), plataforma, país y período, con ordenamiento por volumen y **filtrado automático de cualquier ISRC con DENY explícito para el usuario**.
+  - `getStreamsPorPlataforma()`: distribución por plataforma (`Retailer`) con cálculo de porcentajes.
+  - `getStreamsPorPais()`: métricas geográficas para el mapa de audiencia.
+  - `getTendenciaMensual()`: serie de tiempo mensual de reproducciones agrupada cronológicamente.
+  - `getCatalogo()`: consulta de entidades del artista en el portal.
+- **`backend/src/stats/stats.controller.ts`** — endpoints REST protegidos en cada ruta por `JwtAuthGuard`, `PermissionsGuard` y `@RequireAccess(TipoEntidadPermiso.ARTISTA, 'artistaId')`:
+  - `GET /stats/kpi/:artistaId`
+  - `GET /stats/canciones/:artistaId`
+  - `GET /stats/plataformas/:artistaId`
+  - `GET /stats/paises/:artistaId`
+  - `GET /stats/tendencia/:artistaId`
+  - `GET /stats/catalogo/:artistaId`
+- **`backend/src/stats/stats.module.ts`** — configuración y exportación de servicios y controladores de estadísticas.
+
+#### Módulo de Administración (`AdminModule`)
+- **`backend/src/admin/dto/admin.dtos.ts`** — DTOs con validación estricta (`CreateSelloDto`, `CreateArtistaDto`, `CreateCatalogoItemDto`, `CreateConcesionDto`, `UpdateUsuarioStatusDto`).
+- **`backend/src/admin/admin.service.ts`** — servicio integral de gestión administrativa con trazabilidad inmutable:
+  - **Sellos**: creación, consulta y eliminación con validación de integridad referencial (no permite borrar sellos con artistas vinculados).
+  - **Artistas**: alta y consulta de artistas vinculados a sellos.
+  - **Catálogo**: registro y sincronización de canciones, álbumes y videos (ISRC / UPC).
+  - **Usuarios**: listado de usuarios con artista asignado y estado de invitación, y activación/desactivación de cuentas con registro `CUENTA_DESACTIVADA`.
+  - **Concesiones de Acceso**: otorgamiento de permisos `ALLOW` o `DENY` con revocación automática de concesiones previas redundantes, y revocación explícita registrando `PERMISO_REVOCADO`.
+- **`backend/src/admin/admin.controller.ts`** — endpoints REST protegidos por `JwtAuthGuard`, `RolesGuard` y `@RequireAdmin()`.
+- **`backend/src/admin/admin.module.ts`** — empaquetado del módulo de administración.
+
+#### Módulo de Auditoría (`AuditModule`)
+- **`backend/src/audit/dto/audit-query.dto.ts`** — parámetros de consulta paginada con filtros por usuario, tipo de evento y rango de fechas (`desde`/`hasta`).
+- **`backend/src/audit/audit.service.ts`** — consulta paginada de la tabla `auditoria_accesos` y cálculo de métricas de seguridad en ventana deslizante de 24 horas (logins exitosos, logins fallidos, cambios de permisos, usuarios activos).
+- **`backend/src/audit/audit.controller.ts`** — endpoints `GET /audit/logs` y `GET /audit/stats` restringidos exclusivamente a administradores.
+- **`backend/src/audit/audit.module.ts`** — módulo de auditoría.
+
+#### Seguridad y Rate Limiting
+- **Throttler Global**: Integración de `@nestjs/throttler` en `AppModule` con límite de 100 peticiones por minuto por IP y `ThrottlerGuard` registrado globalmente vía `APP_GUARD`.
+
+### Verificación y Pruebas
+- **Pruebas unitarias añadidas en Fase 3**:
+  - `backend/src/stats/stats.service.spec.ts` (3 pruebas) — verificación estricta de ausencia de campos financieros, cálculo de KPIs y filtrado de exclusiones DENY.
+  - `backend/src/admin/admin.service.spec.ts` (4 pruebas) — integridad referencial en sellos, revocación y otorgamiento de permisos con auditoría.
+  - `backend/src/audit/audit.service.spec.ts` (2 pruebas) — paginación de logs y métricas de seguridad de 24 horas.
+- **Suite completa Jest**: **5/5 suites pasadas, 27/27 pruebas aprobadas (100%)**.
+- **Compilación NestJS**: `nest build` ejecutado exitosamente sin advertencias ni errores.
+
+---
+
+## [0.2.0] — 2026-09-15 — Fase 2 completada (Modelo de Permisos, Autenticación y Provisión)
+
+Implementación completa de la **Fase 2** del [Implementation Plan](./implementation_plan.md): esquema de base de datos para `fonarte_portal` (Azure SQL), motor de resolución de permisos jerárquicos y granulares ("lo más específico gana"), flujo de provisión administrativa de cuentas sin autoregistro vía invitaciones de un solo uso, autenticación con Argon2id + JWT con rotación de refresh tokens, registro inmutable de auditoría de accesos y suite de pruebas unitarias al 100%.
+
+### Añadido
+
+#### Esquema de Base de Datos y Migraciones (`fonarte_portal`)
+- **`sql/migrations/01_create_fonarte_portal_schema.sql`** — script DDL idempotente para Azure SQL Database (`fonarte_portal`, base separada de `fonarte2`). Crea las tablas: `sellos`, `artistas`, `entidades_catalogo`, `usuarios`, `invitaciones_activacion`, `refresh_tokens`, `concesiones_acceso` y `auditoria_accesos`, con índices optimizados y constraints de integridad referencial sin ciclos.
+- **`backend/prisma/schema.prisma`** — modelo Prisma adaptado al conector `sqlserver` (sin enums nativos no soportados en Azure SQL, claves referenciales con `onDelete: NoAction` para evitar cascadas cíclicas).
+- **`backend/prisma/migrations/20260915000000_init_fonarte_portal/migration.sql`** — migración inicial versionada para despliegue automatizado con `prisma migrate deploy`.
+- **`backend/prisma/seed.ts`** — script de inicialización que provisiona el sello base ("Fonarte Latino"), artista demo y cuenta administradora inicial con contraseña segura hasheada en Argon2id y evento en auditoría.
+
+#### Motor de Permisos Granulares y Jerárquicos (§5.2)
+- **`backend/src/permissions/permissions.types.ts`** — tipos e interfaces del motor: `TipoEntidadPermiso` (`SELLO`, `ARTISTA`, `ALBUM`, `CANCION`, `VIDEO`), `EfectoPermiso` (`ALLOW`, `DENY`), `SolicitudPermiso` y `ResultadoPermiso`.
+- **`backend/src/permissions/permissions.service.ts`** — motor de resolución desacoplado de los endpoints. Implementa la regla "lo más específico gana":
+  1. `DENY` explícito al nivel exacto niega el acceso inmediatamente.
+  2. `ALLOW` explícito al nivel exacto concede el acceso.
+  3. Sin concesión exacta, busca y hereda el `ALLOW` más cercano en la jerarquía superior (`ARTISTA` → `SELLO`).
+  4. Sin ninguna concesión en la jerarquía, deniega por defecto (*default deny*).
+  5. Soporta resolución masiva (`listarEntidadesPermitidas`).
+- **`backend/src/permissions/permissions.decorator.ts`** — decorador `@RequireAccess(tipoEntidad, paramKey)` para declarar requisitos de autorización en controladores.
+- **`backend/src/permissions/permissions.guard.ts`** — `PermissionsGuard` de NestJS que intercepta solicitudes, omite administradores, resuelve la jerarquía en base de datos y autoriza/deniega arrojando `ForbiddenException`.
+- **`backend/src/permissions/permissions.module.ts`** — módulo de permisos exportando el servicio y el guard.
+
+#### Autenticación, Sesiones y Provisión de Cuentas (§5.3)
+- **`backend/src/auth/auth.types.ts`** — enums de auditoría (`TipoEventoAuditoria`) y contratos de tokens JWT.
+- **`backend/src/auth/dto/`** — validación estricta con `class-validator`:
+  - `login.dto.ts`: credenciales de acceso con email y contraseña.
+  - `create-invitation.dto.ts`: creación de invitación por admin (asociada opcionalmente a un `artistaId`).
+  - `accept-invitation.dto.ts`: activación con validación de complejidad de contraseña.
+  - `refresh-token.dto.ts`: rotación de token de refresco.
+- **`backend/src/auth/auth.service.ts`** — servicio integral de autenticación:
+  - **Sin autoregistro**: cuentas creadas únicamente por administradores.
+  - **Invitaciones de un solo uso**: tokens criptográficos aleatorios de 32 bytes (64 caracteres hex) con almacenamiento de hash SHA-256 y expiración configurable (default 72h). El admin nunca conoce ni transmite contraseñas en texto claro.
+  - **Argon2id**: hasheo de contraseñas siguiendo estándares OWASP (64MB memoria, 3 iteraciones).
+  - **Sesiones seguras**: JWT de vida corta (15 min) + `refresh_tokens` almacenados con hash SHA-256 y rotación obligatoria en cada refresco.
+  - **Auditoría inmutable**: registro automático en `auditoria_accesos` para eventos `LOGIN_OK`, `LOGIN_FAIL`, `LOGOUT`, `TOKEN_REFRESH`, `INVITACION_CREADA`, `INVITACION_ACTIVADA` y `CUENTA_CREADA`, con IP y User-Agent.
+  - **Perfil de usuario**: endpoint `getPerfil` que expone artista y sello asignado.
+- **`backend/src/auth/auth.controller.ts`** — endpoints REST:
+  - `POST /auth/login` — inicio de sesión.
+  - `POST /auth/refresh` — rotación de tokens.
+  - `POST /auth/logout` — revocación de sesión y refresh token.
+  - `POST /auth/invitations` — generación de invitación (restringido a admin).
+  - `POST /auth/invitations/accept` — activación y definición de contraseña.
+  - `GET /auth/me` — consulta del perfil y permisos del usuario autenticado.
+- **`backend/src/auth/guards/` y `strategies/`**:
+  - `jwt.strategy.ts` y `jwt-auth.guard.ts` — validación de Bearer tokens y usuario activo.
+  - `roles.guard.ts` y `roles.decorator.ts` (`@RequireAdmin()`) — control de acceso basado en rol de administrador.
+  - `current-user.decorator.ts` (`@CurrentUser()`) — extracción limpia del usuario autenticado en controladores.
+- **`backend/src/auth/auth.module.ts`** — configuración de `PassportModule` y `JwtModule`.
+
+#### Estructura y Configuración del Backend NestJS
+- **`backend/tsconfig.json`** y **`backend/tsconfig.build.json`** — compilación TypeScript con soporte completo de decoradores.
+- **`backend/nest-cli.json`** — configuración del CLI de NestJS.
+- **`backend/.env.example`** — plantilla de variables de entorno (separación estricta entre `DATABASE_URL_PORTAL` y `DATABASE_URL_FONARTE2_READONLY`, secretos JWT y expiraciones).
+- **`backend/src/prisma/prisma.service.ts`** y **`prisma.module.ts`** — servicio global de conexión Prisma con desconexión limpia en ciclo de vida del módulo.
+- **`backend/src/app.module.ts`** — módulo raíz ensamblando configuración, Prisma, Auth y Permissions.
+- **`backend/src/main.ts`** — punto de entrada con `ValidationPipe` global (whitelist + forbidNonWhitelisted), CORS parametrizado y documentación Swagger OpenAPI en `/api/docs`.
+
+### Verificación y Pruebas
+- **`backend/src/permissions/permissions.service.spec.ts`** (10 pruebas unitarias) — cubriendo los 4 escenarios de negocio:
+  1. Acceso completo a nivel de artista.
+  2. Acceso a artista con una canción específicamente revocada con DENY.
+  3. Acceso restringido a un solo álbum sin acceso al resto del artista.
+  4. Acceso heredado desde el nivel de sello.
+  5. Casos de default-deny y filtros en batch.
+- **`backend/src/auth/auth.service.spec.ts`** (8 pruebas unitarias) — cubriendo:
+  1. Login exitoso con hash Argon2id y registro de auditoría `LOGIN_OK`.
+  2. Login fallido con usuario inexistente y registro `LOGIN_FAIL`.
+  3. Rechazo de cuentas inactivas o pendientes de activación.
+  4. Creación y hasheo de tokens de invitación por admin (`INVITACION_CREADA`).
+  5. Activación de cuenta por artista con hash Argon2id (`INVITACION_ACTIVADA`).
+  6. Rechazo de invitaciones expiradas o ya usadas.
+  7. Rotación segura de refresh tokens (`TOKEN_REFRESH`).
+- Total de pruebas en suite Jest: **18/18 pruebas aprobadas (100%)**.
+- Compilación del backend con `nest build` completada sin errores.
 
 ---
 

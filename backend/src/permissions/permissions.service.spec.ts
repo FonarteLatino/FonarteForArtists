@@ -11,7 +11,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PermissionsService, SolicitudPermiso } from './permissions.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { TipoEntidadPermiso, EfectoPermiso } from '@prisma/client';
+import { TipoEntidadPermiso, EfectoPermiso } from './permissions.types';
 
 // Mock de PrismaService para tests unitarios (sin BD real)
 const mockPrismaService = {
