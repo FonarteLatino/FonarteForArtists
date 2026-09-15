@@ -19,19 +19,26 @@ export default function LoginPage() {
     try {
       const { user } = await api.login(email, password);
 
+      // Enrutado por rol:
+      //  - Administrador → panel de administración
+      //  - Artista       → portal de estadísticas
       if (user?.esAdmin === true) {
         router.push('/admin');
         return;
       }
 
-      // Cuenta de artista: el panel /admin es exclusivo de administradores.
-      // El portal del artista (Fase 5) todavía no existe, así que no se
-      // redirige a un panel al que no tiene acceso.
-      // Se limpian los tokens localmente (api.logout() recargaría la página
-      // y perdería este mensaje).
+      const artistaId = user?.artistaId ?? user?.artista?.id ?? null;
+      if (artistaId) {
+        router.push('/portal');
+        return;
+      }
+
+      // Cuenta autenticada sin rol admin y sin artista asociado: no hay a dónde
+      // llevarla (ni panel ni portal). Se limpian los tokens localmente
+      // (api.logout() recargaría la página y perdería este mensaje).
       api.clearTokens();
       setError(
-        'Esta cuenta no tiene privilegios de administrador. El portal para artistas estará disponible próximamente.',
+        'Tu cuenta no está asociada a un artista, así que no tiene estadísticas que mostrar ni acceso al panel de administración. Contacta a Fonarte Latino.',
       );
     } catch (err: any) {
       setError(err.message || 'Credenciales inválidas. Por favor intenta de nuevo.');

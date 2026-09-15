@@ -10,8 +10,132 @@ y este proyecto sigue [Versionado Semántico](https://semver.org/lang/es/).
 ## [Unreleased]
 
 > Trabajo en progreso según el [Implementation Plan](./implementation_plan.md).
-> Siguiente hito: **Fase 5 — Portal del Artista** (resumen de streams, desglose por
-> álbum/canción/video, tendencia, plataformas y mapa geográfico).
+> Siguiente hito: **Fase 6 — Despliegue en Azure** (base `fonarte_portal`, Key Vault,
+> Application Insights y CI/CD) y el cierre de la **Fase 1** (aplicar las vistas y validar
+> los totales contra Power BI).
+
+---
+
+## [0.5.0] — 2026-09-15 — Fase 5 completada (Portal del Artista)
+
+Implementación completa de la **Fase 5** del [Implementation Plan](./implementation_plan.md):
+el portal del artista, que es el producto central del proyecto. Además corrige dos bugs de
+la Fase 3 que impedían que el portal funcionara contra la base real: una consulta SQL con
+columnas inexistentes y el filtro de país que nunca se aplicaba.
+
+### Añadido
+
+#### Portal del artista (`frontend/src/app/portal/`)
+- **`portal/layout.tsx`** — layout autenticado del portal: exige sesión válida, pero **no**
+  el rol de administrador (es para cuentas de artista). Una cuenta sin artista asociado
+  recibe un aviso explicativo con salida al panel de permisos, en vez de un portal vacío.
+- **`portal/page.tsx`** — **resumen general** (plan §8): tarjetas KPI de reproducciones
+  totales, último período con su variación porcentual, plataforma líder y país principal;
+  gráfica de área de evolución mensual; dona de distribución por plataforma; top 8 de
+  canciones; top 6 de países; y ficha del catálogo (álbumes, canciones, plataformas, países).
+- **`portal/canciones/page.tsx`** — ranking de canciones con búsqueda por título, álbum o
+  ISRC, selector de cuántas mostrar (25 / 50 / todas) y barra de proporción respecto a la
+  canción más escuchada.
+- **`portal/albumes/page.tsx`** — desglose por **álbum** (podio de los tres primeros más
+  tabla completa) y por **video**: los videos se derivan del catálogo registrado (`tipo ===
+  'VIDEO'`) y se cruzan por ISRC/UPC con las reproducciones, mostrando "sin datos aún"
+  cuando todavía no tienen escuchas.
+- **`portal/plataformas/page.tsx`** — dona de participación y barras horizontales de
+  reproducciones absolutas por plataforma. Las gráficas muestran el top 6 agrupando el resto
+  como "Otras"; la tabla lista **todas** las plataformas.
+- **`portal/mapa/page.tsx`** — **mapa geográfico de audiencia** (plan §8): mapa mundial
+  estilizado en SVG, interactivo, con la intensidad de color proporcional a la audiencia de
+  cada país, leyenda de escala, tarjeta de detalle al seleccionar un país y opción de
+  aplicar ese país como filtro. Incluye el ranking completo de países (con bandera, nombre,
+  reproducciones y participación) para que ningún país quede fuera del mapa, y el desglose
+  por plataforma dentro del país seleccionado.
+- **`portal/tendencia/page.tsx`** — evolución en el tiempo: gráfica de área o línea
+  (conmutable), escala lineal o logarítmica, tabla período a período con la variación
+  firmada, y tendencia apilada por plataforma de las principales. Maneja explícitamente el
+  caso de un solo período (no dibuja una gráfica degenerada) y el de un período anterior en
+  cero (muestra el delta absoluto en vez de un porcentaje falso).
+
+#### Componentes y utilidades del portal
+- **`components/portal/StatsProvider.tsx`** — contexto único del portal: resuelve de qué
+  artista se muestran los datos (perfil de la cuenta, o `?artistaId=` para que un
+  administrador abra el portal de un artista), carga los datos y expone las agregaciones
+  (canciones, álbumes, tendencia, plataformas, países) ya calculadas.
+- **`components/portal/FiltrosStats.tsx`** — barra de filtros compartida: rango de fechas
+  (desde/hasta en formato mes), plataforma y país, con acción de limpiar y aviso del rango
+  de datos disponible.
+- **`components/portal/PortalNavbar.tsx`** — encabezado y navegación del portal, con el
+  nombre del artista, el sello y un recordatorio de que solo se muestran conteos.
+- **`components/portal/ui.tsx`** — primitivos compartidos: `KpiCard`, `Panel`,
+  `EstadoVacio`, `Cargando`, `BannerError` y `BarraProporcion`.
+- **`lib/stats-types.ts`** — contratos tipados de la API de estadísticas, con la regla
+  explícita de que **ningún campo monetario** puede existir en ellos.
+- **`lib/formato.ts`** — formateo de números, porcentajes, períodos, nombres de país y
+  banderas. Deliberadamente **no incluye ninguna función de formato de moneda**.
+
+#### Dependencias
+- **`recharts` 2.12.7** en `frontend/` para las gráficas (dona, barras, área y línea).
+
+### Corregido
+
+- **🔴 `backend/src/stats/stats.service.ts` — consulta SQL con columnas inexistentes.** La
+  consulta de `getStreamsPorCancion` seleccionaba `c.[SONG]` y `c.[ALBUM]`, pero la vista
+  `vw_stats_catalogo_canciones` expone `TRACK_NAME` y `ALBUM_NAME`. Contra la base real esto
+  produce `Invalid column name` y dejaba **sin datos a todo el portal**. Ahora usa
+  `COALESCE(c.[TRACK_NAME], c.[ALBUM_NAME])` como título (los álbumes no tienen
+  `TRACK_NAME`) y `c.[ALBUM_NAME]` como álbum.
+  Se añadieron **4 pruebas de regresión** en `stats.service.spec.ts` que fallan si alguien
+  vuelve a introducir esas columnas, si se consultan las tablas base con columnas monetarias
+  o si se rompen los filtros.
+- **`backend/src/stats/stats.service.ts` — el filtro de país no se aplicaba.**
+  `StatsFiltroDto` acepta `pais` y el frontend lo usa, pero la consulta lo ignoraba en
+  silencio: filtrar por país no cambiaba nada. Ahora se traduce a
+  `AND s.[Country_Sale] = @pais` con parámetro tipado.
+- **`frontend/src/app/login/page.tsx` y `frontend/src/app/page.tsx` — enrutado por rol.**
+  Ya existía la corrección que impedía a un artista entrar al panel, pero se quedaba en un
+  mensaje de "próximamente" porque el portal no existía. Ahora: administrador → `/admin`,
+  cuenta con artista → `/portal`, y una cuenta sin artista y sin rol admin recibe un mensaje
+  claro en vez de un callejón sin salida.
+- **`frontend/tsconfig.json` — `target` de `es5` a `es2017`.** El target `es5` impedía
+  iterar `Set` (`TS2802`), lo que rompía la compilación de tipos del mapa. Next 14 y Tailwind
+  ya apuntan a navegadores modernos, y SWC compila a `es2017` como se indica en la propia
+  configuración de compilación del portal.
+- **`frontend/src/app/portal/mapa/page.tsx`** — la prop `codigosConDatos` no existía en el
+  componente del mapa (se llamaba `codigosSinForma`), lo que impedía compilar la página.
+
+### Cambiado
+
+- **`frontend/src/app/admin/permisos/page.tsx`** — se añadió el botón **"Ver su portal"**,
+  que abre `/portal?artistaId=<id>` en otra pestaña para que un administrador compruebe
+  exactamente qué ve cada cuenta de artista.
+- **`README.md`** — la tabla de fases marca la Fase 5 como completada y se añadió la sección
+  **Portal del artista** con sus rutas, sus filtros y cómo se alimenta de un único endpoint.
+
+### Seguridad
+
+- El portal **no expone ningún dato monetario**: no hay montos, regalías ni cálculos de
+  pago en ninguna pantalla, no existe función de formato de moneda, y los tipos de la API no
+  declaran campos financieros.
+- La autorización se mantiene en el servidor: el portal solo consume
+  `GET /stats/canciones/:artistaId`, que valida permisos con
+  `@RequireAccess(ARTISTA, 'artistaId')` y excluye los ISRC con `DENY` explícito. Manipular
+  `?artistaId=` en la URL no da acceso a datos de otro artista: la API responde 403.
+
+### Verificación
+
+- `npm test -- --runInBand` en `backend/`: **31 pruebas en 5 suites, todas pasando**
+  (incluidas las 4 nuevas de regresión del contrato SQL).
+- `tsc --noEmit` en `backend/` y en `frontend/`: **sin errores de tipos**.
+- `node verificar-compilacion.cjs` en `frontend/`: compilación de todas las páginas con SWC.
+- **Limitación conocida (sin cambios):** `next build` completo sigue sin poder ejecutarse en
+  el entorno de desarrollo usado, porque Next levanta workers con stdio por pipe y el sandbox
+  lo bloquea (`spawn EPERM`). Debe correrse en un entorno sin sandbox antes de desplegar.
+
+### Pendiente
+
+- **Fase 1** — aplicar las 7 vistas en Azure y validar los totales contra Power BI.
+- **Fase 6** — desplegar en Azure: base `fonarte_portal`, migración de Prisma, `seed.ts` para
+  el primer administrador, secretos en Key Vault, Application Insights y CI/CD.
+- Confirmar con el negocio qué plataformas están efectivamente en `fonarte2`.
 
 ---
 
@@ -497,7 +621,8 @@ ORCHARD               — streams Orchard (incluye columnas monetarias)
 - [Código anterior conservado como referencia](./legacy/README.md)
 - [Querys originales Power BI](./Querys%20originales%20power%20Bi)
 
-[Unreleased]: https://github.com/FonarteLatino/FonarteForArtists/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/FonarteLatino/FonarteForArtists/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/FonarteLatino/FonarteForArtists/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/FonarteLatino/FonarteForArtists/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/FonarteLatino/FonarteForArtists/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/FonarteLatino/FonarteForArtists/compare/v0.1.0...v0.2.0

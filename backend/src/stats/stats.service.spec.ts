@@ -165,4 +165,86 @@ describe('StatsService — Pruebas Unitarias', () => {
       expect(plataformas[1].porcentaje).toBe(25);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // Regresión: las columnas del SELECT deben existir en las vistas de la Fase 1.
+  //
+  // Las vistas exponen TRACK_NAME y ALBUM_NAME. Una versión anterior consultaba
+  // `c.[SONG]` y `c.[ALBUM]`, que no existen en vw_stats_catalogo_canciones: en
+  // SQL Server real eso produce "Invalid column name" y dejaba el portal sin
+  // datos. Estas pruebas fallan si alguien vuelve a introducir esas columnas.
+  // ---------------------------------------------------------------------------
+  describe('Contrato SQL con las vistas de la Fase 1 (regresión)', () => {
+    beforeEach(() => {
+      mockPrisma.artista.findUnique.mockResolvedValue({ id: 1, nombre: 'Test Artista' });
+      mockPrisma.entidadCatalogo.findMany.mockResolvedValue([]);
+      mockPrisma.concesionAcceso.findMany.mockResolvedValue([]);
+      mockFonarte2Db.query.mockResolvedValue([]);
+    });
+
+    it('debe consultar TRACK_NAME y ALBUM_NAME, no columnas inexistentes', async () => {
+      await service.getStreamsPorCancion(1, 1, {});
+
+      const sql = mockFonarte2Db.query.mock.calls[0][0] as string;
+
+      // Columnas reales de vw_stats_catalogo_canciones
+      expect(sql).toContain('c.[TRACK_NAME]');
+      expect(sql).toContain('c.[ALBUM_NAME]');
+      // El nombre del álbum sirve de título de respaldo (los álbumes no tienen TRACK_NAME)
+      expect(sql).toContain('COALESCE');
+
+      // Columnas que NO existen en la vista
+      expect(sql).not.toContain('c.[SONG]');
+      expect(sql).not.toContain('c.[ALBUM]');
+      expect(sql).not.toMatch(/c\.\[ALBUM\]\s+AS/i);
+    });
+
+    it('debe consultar solo las vistas y tablas permitidas de fonarte2', async () => {
+      await service.getStreamsPorCancion(1, 1, {});
+
+      const sql = mockFonarte2Db.query.mock.calls[0][0] as string;
+
+      expect(sql).toContain('[dbo].[vw_stats_streams_por_cancion]');
+      expect(sql).toContain('[dbo].[vw_stats_catalogo_canciones]');
+
+      // Nunca debe tocar las tablas base que contienen columnas monetarias
+      for (const tablaProhibida of [
+        'APPLEMUSIC',
+        'ITUNES',
+        'ORCHARD',
+        '000_Client_Dashboard_Total',
+      ]) {
+        expect(sql).not.toContain(tablaProhibida);
+      }
+      expect(sql).not.toMatch(/Net_Royalty|Partner_Share|Label_Share/i);
+    });
+
+    it('debe aplicar el filtro de país cuando se solicita', async () => {
+      await service.getStreamsPorCancion(1, 1, { pais: 'MEX' });
+
+      const sql = mockFonarte2Db.query.mock.calls[0][0] as string;
+      const params = mockFonarte2Db.query.mock.calls[0][1];
+
+      expect(sql).toContain('s.[Country_Sale] = @pais');
+      expect(params.pais.value).toBe('MEX');
+    });
+
+    it('debe aplicar los filtros de período y plataforma', async () => {
+      await service.getStreamsPorCancion(1, 1, {
+        periodoInicio: '2024-01',
+        periodoFin: '2024-06',
+        plataforma: 'Spotify',
+      });
+
+      const sql = mockFonarte2Db.query.mock.calls[0][0] as string;
+      const params = mockFonarte2Db.query.mock.calls[0][1];
+
+      expect(sql).toContain('s.[Year_Month] >= @periodoInicio');
+      expect(sql).toContain('s.[Year_Month] <= @periodoFin');
+      expect(sql).toContain('s.[Retailer] = @plataforma');
+      expect(params.periodoInicio.value).toBe('2024-01');
+      expect(params.periodoFin.value).toBe('2024-06');
+      expect(params.plataforma.value).toBe('Spotify');
+    });
+  });
 });

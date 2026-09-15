@@ -167,12 +167,15 @@ export class StatsService {
 
     const { deniedIsrcs } = await this.obtenerReferenciasAutorizadas(artistaId, usuarioId);
 
-    // Consulta contra vw_stats_streams_por_cancion unida con catálogo
+    // Consulta contra vw_stats_streams_por_cancion unida con el catálogo.
+    // Columnas reales de vw_stats_catalogo_canciones: TRACK_NAME (título de la
+    // canción/video) y ALBUM_NAME. Los álbumes no tienen TRACK_NAME, por lo que
+    // se usa el nombre del álbum como título de respaldo.
     let query = `
       SELECT
         s.[ISRC] AS [isrc],
-        c.[SONG] AS [titulo],
-        c.[ALBUM] AS [album],
+        COALESCE(c.[TRACK_NAME], c.[ALBUM_NAME]) AS [titulo],
+        c.[ALBUM_NAME] AS [album],
         c.[ARTIST] AS [artista],
         s.[Retailer] AS [plataforma],
         s.[Year_Month] AS [periodo],
@@ -203,6 +206,11 @@ export class StatsService {
       params.plataforma = { type: sql.NVarChar(100), value: filtro.plataforma };
     }
 
+    if (filtro.pais) {
+      query += ` AND s.[Country_Sale] = @pais`;
+      params.pais = { type: sql.NVarChar(100), value: filtro.pais };
+    }
+
     // Exclusión explícita de ISRCs denegados
     if (deniedIsrcs.length > 0) {
       const deniedList = deniedIsrcs.map((_, i) => `@denied${i}`).join(',');
@@ -215,8 +223,8 @@ export class StatsService {
     query += `
       GROUP BY
         s.[ISRC],
-        c.[SONG],
-        c.[ALBUM],
+        c.[TRACK_NAME],
+        c.[ALBUM_NAME],
         c.[ARTIST],
         s.[Retailer],
         s.[Year_Month],

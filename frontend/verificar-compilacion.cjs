@@ -17,10 +17,23 @@ const archivos = [
   'src/app/admin/usuarios/page.tsx',
   'src/app/admin/permisos/page.tsx',
   'src/app/admin/auditoria/page.tsx',
+  'src/app/portal/layout.tsx',
+  'src/app/portal/page.tsx',
+  'src/app/portal/canciones/page.tsx',
+  'src/app/portal/albumes/page.tsx',
+  'src/app/portal/plataformas/page.tsx',
+  'src/app/portal/mapa/page.tsx',
+  'src/app/portal/tendencia/page.tsx',
   'src/components/AdminNavbar.tsx',
   'src/components/AdminSidebar.tsx',
   'src/components/ConfirmModal.tsx',
+  'src/components/portal/StatsProvider.tsx',
+  'src/components/portal/PortalNavbar.tsx',
+  'src/components/portal/FiltrosStats.tsx',
+  'src/components/portal/ui.tsx',
   'src/lib/api.ts',
+  'src/lib/formato.ts',
+  'src/lib/stats-types.ts',
 ];
 
 (async () => {

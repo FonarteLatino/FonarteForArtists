@@ -18,13 +18,19 @@ export default function HomePage() {
     try {
       const user = userStr ? JSON.parse(userStr) : null;
 
+      // Enrutado por rol: administradores al panel, artistas al portal.
       if (user?.esAdmin === true) {
         router.replace('/admin');
         return;
       }
 
-      // Cuenta sin rol admin: no se le envía al panel (ruta protegida por rol).
-      // El portal del artista (Fase 5) aún no existe.
+      const artistaId = user?.artistaId ?? user?.artista?.id ?? null;
+      if (artistaId) {
+        router.replace('/portal');
+        return;
+      }
+
+      // Cuenta sin rol admin y sin artista: no hay destino válido.
       router.replace('/login');
     } catch {
       router.replace('/login');

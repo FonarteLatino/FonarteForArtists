@@ -43,7 +43,7 @@ El proyecto está en construcción, siguiendo el
 | **Fase 2** | Modelo de permisos y autenticación | ✅ Esquema Prisma, `PermissionsService`, `AuthModule` (JWT + Argon2id + invitaciones) y auditoría |
 | **Fase 3** | API backend (NestJS) | ✅ `AuthModule`, `PermissionsModule`, `StatsModule`, `AdminModule`, `AuditModule` + 27 tests |
 | **Fase 4** | Panel de administración | ✅ Completada — sellos, artistas/catálogo, usuarios/invitaciones, permisos y auditoría |
-| **Fase 5** | Portal del artista (frontend) | ⚪ No iniciada — solo existe el panel de administración |
+| **Fase 5** | Portal del artista (frontend) | ✅ Completado — resumen, canciones, álbumes/videos, plataformas, mapa y tendencia |
 | **Fase 6** | Despliegue en Azure | ⚪ No iniciada |
 
 **Qué existe hoy en código:** backend NestJS completo (auth con Argon2id y refresh tokens
@@ -72,6 +72,36 @@ Toda la ruta `/admin` está **protegida por rol**: un usuario autenticado que no
 administrador ve una pantalla de "acceso restringido" y nunca el panel. Cada acción
 sensible (revocar accesos masivos, desactivar cuentas, eliminar sellos) pasa por un modal
 de confirmación explícito.
+
+### Portal del artista (Fase 5)
+
+Es el producto para el que existe todo lo demás: el artista entra y ve **cuántas veces se
+reprodujo su música**. Vive en `/portal`, requiere sesión, y no exige rol de
+administrador (es justamente para las cuentas de artista).
+
+| Ruta | Qué muestra |
+|---|---|
+| `/portal` | **Resumen**: reproducciones totales, último período con su variación, plataforma líder, país principal, evolución mensual, distribución por plataforma, top de canciones, audiencia por país y ficha del catálogo |
+| `/portal/canciones` | Ranking de canciones con búsqueda por título/álbum/ISRC y selector de cuántas mostrar |
+| `/portal/albumes` | Álbumes (podio + tabla completa) y **videos** registrados, cruzando el catálogo por ISRC/UPC con las reproducciones |
+| `/portal/plataformas` | Dona de participación y barras por plataforma, con top 6 + "Otras" en la gráfica y **todas** en la tabla |
+| `/portal/mapa` | Mapa mundial estilizado e **interactivo** (intensidad según audiencia) más el ranking completo de países y el desglose por plataforma del país elegido |
+| `/portal/tendencia` | Evolución mes a mes, con vista de área/línea, escala lineal/logarítmica, tabla período a período y tendencia apilada por plataforma |
+
+**Filtros** (plan §8: rango de fechas y plataforma; se añade país porque el mapa lo
+necesita) en una barra compartida por todas las vistas: desde/hasta en formato mes,
+plataforma y país.
+
+**Cómo se alimenta:** todas las vistas consumen un único endpoint
+(`GET /stats/canciones/:artistaId`, que ya viene filtrado por permisos y con los ISRC
+denegados excluidos) y agregan en el cliente. Así los filtros son consistentes entre
+pantallas y no se multiplican las llamadas. Un administrador puede abrir el portal de
+cualquier artista con `/portal?artistaId=<id>` — útil para verificar qué ve esa cuenta —,
+y el backend sigue validando los permisos en cada petición.
+
+**Sin dinero, en ninguna pantalla:** no hay montos, regalías ni cálculos de pago. No
+existe ni una función de formato de moneda en el portal, y los tipos de la API no
+declaran ningún campo monetario.
 
 ---
 

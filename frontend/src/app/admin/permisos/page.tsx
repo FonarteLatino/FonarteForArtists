@@ -604,6 +604,15 @@ export default function PermisosPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
+                  <a
+                    href={`/portal?artistaId=${usuarioSel.artista.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-300 border border-fonarte-border hover:bg-slate-800/60 transition"
+                    title="Abre el portal del artista tal como lo verá esta cuenta"
+                  >
+                    Ver su portal ↗
+                  </a>
                   <button
                     onClick={() => accionMasiva('CATALOGO_COMPLETO')}
                     disabled={ocupado}
