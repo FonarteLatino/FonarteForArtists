@@ -1,4 +1,56 @@
+# =============================================================================
+# Fonarte For Artists — .gitignore
+# =============================================================================
 
-ApiRestFonarte/node_modules/
-nodejsapi/node_modules/
-Api2/node_modules
+# -----------------------------------------------------------------------------
+# Secretos y configuración local — NUNCA versionar
+# -----------------------------------------------------------------------------
+# Contiene credenciales reales de Azure SQL (usuario/contraseña en texto plano).
+# Vive en legacy/nodejsapi/ solo como referencia histórica local.
+**/dbconfig.js
+.env
+.env.*
+!.env.example
+
+# -----------------------------------------------------------------------------
+# Dependencias
+# -----------------------------------------------------------------------------
+node_modules/
+vendor/
+.pnp.*
+.yarn/cache
+
+# -----------------------------------------------------------------------------
+# Build / artefactos generados
+# -----------------------------------------------------------------------------
+dist/
+build/
+out/
+.next/
+coverage/
+*.tsbuildinfo
+
+# Prisma
+backend/prisma/migrations/dev.db*
+
+# -----------------------------------------------------------------------------
+# Capas anteriores del proyecto — ya no se usan en el portal nuevo.
+# Se conservan en disco como referencia local (ver legacy/README.md) y se
+# pueden recuperar en cualquier momento desde el historial de git.
+# -----------------------------------------------------------------------------
+/Api2/
+/ApiRestFonarte/
+/FrontFonarteForArtists/
+/OldFrontFonarteForArtists/
+
+# -----------------------------------------------------------------------------
+# Entorno / editores / sistema operativo
+# -----------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-error.log*

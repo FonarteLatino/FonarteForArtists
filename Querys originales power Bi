@@ -1,0 +1,55 @@
+Apple
+Net_Royalty_Artist_applemusic = Apple_Music[Net_Royalty] * Apple_Music[Tipo_de_cambio] * 0.62
+Net_Royalty_Total_Artist_applemusic = Apple_Music[Net_Royalty_Total] * Apple_Music[Tipo_de_cambio] * 0.62
+Net_royalty_total_sum = SUM(Apple_Music[Net_Royalty_Total_Artist_applemusic]) 
+Selected_period_applemusic = "Period: [" & FORMAT(FIRSTDATE(Apple_Music[Year_month]),"MMM YYYY") 
+    & "] to [" & FORMAT(LASTDATE(Apple_Music[Year_month]), "MMM YYYY") & "]"
+    Unit_sales_applemusic = SUM(Apple_Music[Quantity])
+ Year_month = date(Apple_Music[Anio],Apple_Music[Mes],1)
+ = Table.TransformColumnTypes(#"Added Index",{{"Index", Int64.Type}})
+ = Table.AddIndexColumn(#"Changed Type", "Index", 1, 1)
+ = Table.TransformColumnTypes(Source,{{"Quantity", Int64.Type}, {"Item_Type", Int64.Type}, {"Media_Type", Int64.Type}, {"Offline_Indicator", Int64.Type}})
+ = Sql.Database("fonarte2.database.windows.net", "Reporteador", [Query="WITH aMusic AS (#(lf)#(tab)SELECT *,#(lf)#(tab)#(tab)CONCAT(Anio,'_',Mes,'_',Currency) AS [Currency_ID]#(lf)#(tab)FROM [dbo].[APPLEMUSIC]#(lf) WHERE Anio >= 2022),#(lf)appC AS (#(lf)#(tab)SELECT Divisa,#(lf)#(tab)#(tab)   Mes,#(lf)#(tab)#(tab)   Anio,#(lf)#(tab)#(tab)   MAX(Tipo_de_cambio) AS [Tipo_de_cambio],#(lf)#(tab)#(tab)   CONCAT(Anio,'_',Mes,'_',Divisa) AS [Currency_ID]#(lf)#(tab)FROM [dbo].[APPLE_CURRENCY]#(lf)#(tab)GROUP BY Divisa, Mes, Anio#(lf))#(lf)SELECT aMusic.*,#(lf)       appC.Tipo_de_cambio#(lf)FROM aMusic#(lf)LEFT JOIN appC#(lf)#(tab)ON aMusic.Currency_ID=appC.Currency_ID;"])
+
+ Base Total
+ = Sql.Database("fonarte2.database.windows.net", "Reporteador", [Query="WITH CTE AS ( #(lf)#(tab)SELECT ISRC, #(lf)#(tab)#(tab)#(tab)MAX(RELEASE_DATE) AS [RELEASE_DATE],#(lf)#(tab)#(tab)#(tab)MAX(UPC) AS [UPC]#(lf)#(tab)FROM [dbo].[BBDD_FINAL_CANCIONES]#(lf)#(tab)GROUP BY ISRC#(lf)),#(lf)CTE2 AS (#(lf)#(tab)SELECT SONGS.*#(lf)#(tab)FROM CTE#(lf)#(tab)INNER JOIN [dbo].[BBDD_FINAL_CANCIONES] AS SONGS#(lf)#(tab)#(tab)ON CTE.ISRC = SONGS.ISRC AND CTE.RELEASE_DATE = SONGS.RELEASE_DATE AND CTE.UPC = SONGS.UPC#(lf)#(lf)#(tab)UNION#(lf)#(lf)#(tab)SELECT [UPC]#(lf)#(tab)#(tab)#(tab),[ALBUM_ID]#(lf)#(tab)#(tab)#(tab),[ARTIST]#(lf)#(tab)#(tab)#(tab),[ALBUM_NAME]#(lf)#(tab)#(tab)#(tab),NULL AS [TRACK_NUMBER]#(lf)#(tab)#(tab)#(tab),[UPC] AS [ISRC]#(lf)#(tab)#(tab)#(tab),NULL AS [TRACK_NAME]#(lf)#(tab)#(tab)#(tab),[GENRE]#(lf)#(tab)#(tab)#(tab),[SELLO]#(lf)#(tab)#(tab)#(tab),[LABEL]#(lf)#(tab)#(tab)#(tab),[COPYRIGHT_YEAR]#(lf)#(tab)#(tab)#(tab),[RELEASE_DATE]#(lf)#(tab)FROM [dbo].[BBDD_FINAL_CANCIONES]#(lf)#(tab)GROUP BY [UPC], [ALBUM_ID], [ARTIST], [ALBUM_NAME], [GENRE], [SELLO], [LABEL], [COPYRIGHT_YEAR], [RELEASE_DATE]#(lf))#(lf)#(lf)SELECT FINAL.*#(lf)FROM (#(lf)#(tab)SELECT * FROM CTE2#(lf)#(lf)#(tab)UNION#(lf)#(lf)#(tab)SELECT   [UPC]#(lf)#(tab)#(tab)#(tab),[VIDEO_ID] AS [ALBUM_ID]#(lf)#(tab)#(tab)#(tab),[ARTIST]#(lf)#(tab)#(tab)#(tab),[TITLE_ALBUM] AS [ALBUM_NAME]#(lf)#(tab)#(tab)#(tab),NULL AS [TRACK_NUMBER]#(lf)#(tab)#(tab)#(tab),[ISRC]#(lf)#(tab)#(tab)#(tab),[TITLE_VIDEO] AS [TRACK_NAME]#(lf)#(tab)#(tab)#(tab),'VIDEO' AS [GENRE]#(lf)#(tab)#(tab)#(tab),NULL AS [SELLO]#(lf)#(tab)#(tab)#(tab),NULL AS [LABEL]#(lf)#(tab)#(tab)#(tab),NULL AS [COPYRIGHT_YEAR]#(lf)#(tab)#(tab)#(tab),NULL AS [RELEASE_DATE]#(lf)#(tab)FROM [dbo].[BBDD_FINAL_VIDEOS]#(lf)#(tab)WHERE ISRC NOT IN (#(lf)#(tab)#(tab)SELECT ISRC FROM CTE2#(lf)#(tab))#(lf)#(lf)) FINAL#(lf)WHERE ISRC NOT IN (#(lf) '191018096595'#(lf))"])
+
+ Countries
+ = Table.RenameColumns(#"Changed Type",{{"TIENDA", "Country_name"}, {"ABREVIATURA EN REPORTES", "Country_code"}, {"REPORTES APPLEMUSIC", "applemusic_type"}, {"REPORTES ITUNES", "itunes_code"}})
+
+ Itunes
+ Date_filter = Itunes[Anio] & "_" & Itunes[Mes]
+ Dealer = "iTunes"
+ Net_Royalty_Artist_itunes = Itunes[Partner_Share] * Itunes[Tipo_de_cambio] * 0.62
+ Net_Royalty_Total_Artist_itunes = Itunes[Extended_Partner_Share] * Itunes[Tipo_de_cambio] * 0.62
+ Net_royalty_total_itunes_sum = SUM(Itunes[Net_Royalty_Total_Artist_itunes]) 
+ Selected_period_itunes = "Period: [" & FORMAT(FIRSTDATE(Itunes[Year_month]),"MMM YYYY") 
+    & "] to [" & FORMAT(LASTDATE(Itunes[Year_month]), "MMM YYYY") & "]"
+ Unit_sales_itunes = SUM(Itunes[Quantity])
+ Year_month = Itunes[Anio] & "-" & Itunes[Mes] & "-" & "01"
+ = Table.TransformColumnTypes(#"Added Index",{{"Index", Int64.Type}})
+ = Table.AddIndexColumn(#"Changed Type", "Index", 1, 1)
+ = Table.TransformColumnTypes(Source,{{"Start_Date", type date}, {"End_Date", type date}, {"Quantity", Int64.Type}})
+ = Sql.Database("fonarte2.database.windows.net", "Reporteador", [Query="WITH itunes AS (#(lf)#(tab)SELECT *,#(lf)#(tab)    CASE#(lf)#(tab)#(tab)#(tab)WHEN UPC=Vendor_Identifier THEN 'ALBUM'#(lf)#(tab)#(tab)#(tab)ELSE 'SONG'#(lf)#(tab)#(tab)END AS [Product_Type],#(lf)#(tab)#(tab)CONCAT(Anio,'_',Mes,'_',Partner_Share_Currency) AS [Currency_ID]#(lf)#(tab)FROM [dbo].[ITUNES]#(lf) WHERE Anio >= 2022),#(lf)appC AS (#(lf)#(tab)SELECT Divisa,#(lf)#(tab)#(tab)   Mes,#(lf)#(tab)#(tab)   Anio,#(lf)#(tab)#(tab)   MAX(Tipo_de_cambio) AS [Tipo_de_cambio],#(lf)#(tab)#(tab)   CONCAT(Anio,'_',Mes,'_',Divisa) AS [Currency_ID]#(lf)#(tab)FROM [dbo].[APPLE_CURRENCY]#(lf)#(tab)GROUP BY Divisa, Mes, Anio#(lf))#(lf)SELECT itunes.*,#(lf)       appC.Tipo_de_cambio#(lf)FROM itunes#(lf)LEFT JOIN appC#(lf)#(tab)ON itunes.Currency_ID=appC.Currency_ID"])
+
+ Orchard
+ Date_filter = Orchard[Anio] & "_" & Orchard[Mes]
+ Dealer = "Orchard"
+ Net_Royalty_Artist_orchard = Orchard[Net_Royalty_Total_Artist_orchard] / Orchard[Quantity]
+ Net_Royalty_Total_Artist_orchard = (Orchard[Label_Share_Net_Receipts] * 16.50 * 0.62)
+ Net_royalty_total_orchard_sum = SUM(Orchard[Net_Royalty_Total_Artist_orchard])
+ Selected_period_orchard = "Period: [" & FORMAT(FIRSTDATE(Orchard[Year_month]),"MMM YYYY") 
+    & "] to [" & FORMAT(LASTDATE(Orchard[Year_month]), "MMM YYYY") & "]"
+TEST_ISRC = CONCATENATE("_",Orchard[ISRC])
+Unit_sales_orchard = SUM(Orchard[Quantity])
+Year_month = Orchard[Anio] & "-" & Orchard[Mes] & "-" & "01"
+= Table.TransformColumnTypes(#"Added Index",{{"Index", Int64.Type}})
+= Table.AddIndexColumn(#"Changed Type", "Index", 1, 1)
+= Table.TransformColumnTypes(Source,{{"Period", type text}, {"Volume", Int64.Type}, {"Track", Int64.Type}, {"Quantity", Int64.Type}})
+= Sql.Database("fonarte2.database.windows.net", "Reporteador", [Query="SELECT *,#(lf)   CASE #(lf)      WHEN Orchard_UPC=ISRC THEN 'ALBUM' #(lf)       ELSE 'SONG'#(lf)   END AS [Product_Type]#(lf)FROM [dbo].[ORCHARD] WHERE Anio >= 2022"])
+
+Videos album final
+= Sql.Database("fonarte2.database.windows.net", "Reporteador", [Query="  SELECT [UPC]#(lf)        ,[ARTIST]#(lf)        ,[TITLE_ALBUM]#(lf)  FROM [dbo].[BBDD_FINAL_VIDEOS]#(lf)  GROUP BY [UPC],[ARTIST],[TITLE_ALBUM]"])
+
+Videos final
+= Sql.Database("fonarte2.database.windows.net", "Reporteador", [Query="SELECT [UPC]#(lf)      ,[ISRC]#(lf)      ,[VIDEO_ID]#(lf)      ,[ARTIST]#(lf)      ,[TITLE_ALBUM]#(lf)      ,[TITLE_VIDEO]#(lf)  FROM [dbo].[BBDD_FINAL_VIDEOS]#(lf)  GROUP BY [UPC],[ISRC],[VIDEO_ID],[ARTIST],[TITLE_ALBUM],[TITLE_VIDEO]"])

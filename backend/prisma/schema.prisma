@@ -1,0 +1,206 @@
+// =============================================================================
+// Prisma Schema — fonarte_portal database
+// Base de datos de PERMISOS, separada de fonarte2 (Azure SQL Server)
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Conexión a fonarte_portal (Azure SQL, base separada de fonarte2)
+  // La cadena de conexión viene de Azure Key Vault vía variable de entorno.
+  // NUNCA hardcodear la cadena de conexión aquí.
+  provider = "sqlserver"
+  url      = env("DATABASE_URL_PORTAL")
+}
+
+// =============================================================================
+// MÓDULO DE ORGANIZACIÓN (jerarquía Sello → Artista)
+// =============================================================================
+
+model Sello {
+  id        Int       @id @default(autoincrement())
+  nombre    String    @db.VarChar(500)
+  creadoEn  DateTime  @default(now()) @map("creado_en")
+
+  artistas  Artista[]
+
+  @@map("sellos")
+}
+
+model Artista {
+  id       Int    @id @default(autoincrement())
+  selloId  Int    @map("sello_id")
+  nombre   String @db.VarChar(500)
+
+  sello     Sello               @relation(fields: [selloId], references: [id])
+  usuarios  Usuario[]
+  entidades EntidadCatalogo[]
+  concesiones ConcesionAcceso[]
+
+  @@map("artistas")
+}
+
+// =============================================================================
+// MÓDULO DE CATÁLOGO (referencia a fonarte2, solo lectura)
+// Almacena el ID de referencia (ISRC/UPC) que existe en fonarte2,
+// sin duplicar los datos de streaming.
+// =============================================================================
+
+enum TipoContenido {
+  ALBUM
+  CANCION
+  VIDEO
+}
+
+model EntidadCatalogo {
+  id              Int            @id @default(autoincrement())
+  artistaId       Int            @map("artista_id")
+  tipo            TipoContenido
+  // Referencia al ID en fonarte2: ISRC para canciones/videos, UPC para álbumes
+  referenciaIdFonarte2 String   @map("referencia_id_en_fonarte2") @db.VarChar(200)
+  nombre          String?        @db.VarChar(500)
+  creadoEn        DateTime       @default(now()) @map("creado_en")
+
+  artista     Artista           @relation(fields: [artistaId], references: [id])
+  concesiones ConcesionAcceso[]
+
+  @@map("entidades_catalogo")
+}
+
+// =============================================================================
+// MÓDULO DE USUARIOS
+// =============================================================================
+
+model Usuario {
+  id              Int       @id @default(autoincrement())
+  artistaId       Int?      @map("artista_id")  // null = admin
+  email           String    @unique @db.VarChar(500)
+  hashPassword    String?   @map("hash_password") @db.VarChar(1000)  // null si se usa Azure AD B2C
+  esAdmin         Boolean   @default(false) @map("es_admin")
+  activo          Boolean   @default(true)
+  mfaHabilitado   Boolean   @default(false) @map("mfa_habilitado")
+  mfaSecret       String?   @map("mfa_secret") @db.VarChar(500)  // Almacenado cifrado
+  creadoPor       Int?      @map("creado_por")  // usuario_id del admin que lo creó
+  creadoEn        DateTime  @default(now()) @map("creado_en")
+  actualizadoEn   DateTime  @updatedAt @map("actualizado_en")
+
+  artista         Artista?          @relation(fields: [artistaId], references: [id])
+  invitaciones    InvitacionActivacion[]
+  concesionesOtorgadas ConcesionAcceso[] @relation("UsuarioConcedente")
+  concesiones     ConcesionAcceso[]      @relation("UsuarioConcedido")
+  refreshTokens   RefreshToken[]
+  auditoria       AuditoriaAcceso[]
+
+  @@map("usuarios")
+}
+
+// =============================================================================
+// MÓDULO DE INVITACIONES (flujo de creación de cuenta sin exponer contraseñas)
+// =============================================================================
+
+model InvitacionActivacion {
+  id         Int       @id @default(autoincrement())
+  usuarioId  Int       @map("usuario_id")
+  token      String    @unique @db.VarChar(1000)  // token de un solo uso, hash SHA-256
+  expiraEn   DateTime  @map("expira_en")
+  usadaEn    DateTime? @map("usada_en")
+  creadoEn   DateTime  @default(now()) @map("creado_en")
+
+  usuario    Usuario   @relation(fields: [usuarioId], references: [id])
+
+  @@map("invitaciones_activacion")
+}
+
+// =============================================================================
+// MÓDULO DE SESIONES (refresh tokens)
+// =============================================================================
+
+model RefreshToken {
+  id          Int       @id @default(autoincrement())
+  usuarioId   Int       @map("usuario_id")
+  tokenHash   String    @unique @map("token_hash") @db.VarChar(1000)
+  expiraEn    DateTime  @map("expira_en")
+  revocadoEn  DateTime? @map("revocado_en")
+  creadoEn    DateTime  @default(now()) @map("creado_en")
+  ipOrigen    String?   @map("ip_origen") @db.VarChar(50)
+
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id])
+
+  @@map("refresh_tokens")
+}
+
+// =============================================================================
+// MÓDULO DE PERMISOS (concesiones de acceso)
+// Implementa la regla: "lo más específico gana"
+// ALLOW/DENY explícito; default es DENY cuando no hay concesión.
+// =============================================================================
+
+enum TipoEntidadPermiso {
+  SELLO
+  ARTISTA
+  ALBUM
+  CANCION
+  VIDEO
+}
+
+enum EfectoPermiso {
+  ALLOW
+  DENY
+}
+
+model ConcesionAcceso {
+  id              Int                  @id @default(autoincrement())
+  // Usuario al que aplica el permiso
+  usuarioId       Int                  @map("usuario_id")
+  // Qué tipo de entidad se está concediendo/denegando
+  tipoEntidad     TipoEntidadPermiso   @map("tipo_entidad")
+  // ID en fonarte_portal (artista.id, sello.id, entidad_catalogo.id, etc.)
+  entidadId       Int                  @map("entidad_id")
+  // ALLOW = acceso permitido, DENY = acceso explícitamente denegado
+  efecto          EfectoPermiso
+  // Admin que otorgó este permiso
+  otorgadoPor     Int                  @map("otorgado_por")
+  otorgadoEn      DateTime             @default(now()) @map("otorgado_en")
+  // null = vigente; fecha = revocado
+  revocadoEn      DateTime?            @map("revocado_en")
+
+  usuario         Usuario              @relation("UsuarioConcedido", fields: [usuarioId], references: [id])
+  concedente      Usuario              @relation("UsuarioConcedente", fields: [otorgadoPor], references: [id])
+  entidadCatalogo EntidadCatalogo?     @relation(fields: [entidadId], references: [id])
+  artista         Artista?             @relation(fields: [entidadId], references: [id])
+
+  @@map("concesiones_acceso")
+}
+
+// =============================================================================
+// MÓDULO DE AUDITORÍA
+// Registra accesos (exitosos y fallidos) y cambios de permisos.
+// =============================================================================
+
+enum TipoEventoAuditoria {
+  LOGIN_OK
+  LOGIN_FAIL
+  LOGOUT
+  PERMISO_OTORGADO
+  PERMISO_REVOCADO
+  DATOS_CONSULTADOS
+  CUENTA_CREADA
+  CUENTA_DESACTIVADA
+}
+
+model AuditoriaAcceso {
+  id                 Int                    @id @default(autoincrement())
+  usuarioId          Int?                   @map("usuario_id")  // null si login fallido sin usuario encontrado
+  evento             TipoEventoAuditoria
+  // Descripción del recurso consultado o acción realizada
+  detalle            String?                @db.VarChar(2000)
+  ipOrigen           String?                @map("ip_origen") @db.VarChar(50)
+  userAgent          String?                @map("user_agent") @db.VarChar(500)
+  fecha              DateTime               @default(now())
+
+  usuario            Usuario?               @relation(fields: [usuarioId], references: [id])
+
+  @@map("auditoria_accesos")
+}
