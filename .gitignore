@@ -19,6 +19,8 @@ node_modules/
 vendor/
 .pnp.*
 .yarn/cache
+# Caché local de npm (usado cuando el caché global no es escribible)
+.npm-cache/
 
 # -----------------------------------------------------------------------------
 # Build / artefactos generados

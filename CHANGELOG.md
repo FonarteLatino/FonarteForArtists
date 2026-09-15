@@ -10,7 +10,112 @@ y este proyecto sigue [Versionado Semántico](https://semver.org/lang/es/).
 ## [Unreleased]
 
 > Trabajo en progreso según el [Implementation Plan](./implementation_plan.md).
-> Siguiente hito: **Fase 4 — Panel de Administración (Frontend Next.js)** y **Fase 5 — Portal del Artista (Frontend con Gráficas y Mapa)**.
+> Siguiente hito: **Fase 5 — Portal del Artista** (resumen de streams, desglose por
+> álbum/canción/video, tendencia, plataformas y mapa geográfico).
+
+---
+
+## [0.4.0] — 2026-09-15 — Fase 4 completada (Panel de Administración)
+
+Implementación completa de la **Fase 4** del [Implementation Plan](./implementation_plan.md):
+el panel de administración en Next.js 14 (App Router) que cubre los 5 puntos de la sección 7
+del plan. Incluye la corrección de una vulnerabilidad de control de acceso por rol que
+permitía a cualquier usuario autenticado renderizar el panel.
+
+### Añadido
+
+#### Panel de administración (`frontend/`)
+- **`frontend/src/app/admin/sellos/page.tsx`** — alta y baja de sellos (punto 1 del plan):
+  listado con conteo de artistas, alta con validación y eliminación protegida por
+  confirmación. El backend rechaza borrar un sello con artistas asignados y la UI muestra
+  ese mensaje tal cual.
+- **`frontend/src/app/admin/artistas/page.tsx`** — alta de artistas por sello y registro de
+  su catálogo (punto 1 del plan): listado expandible por artista, alta con selector de
+  sello, y registro de elementos de catálogo por **ISRC/UPC** indicando tipo
+  (álbum/canción/video), con la aclaración de que solo se guarda la referencia y no se
+  duplican datos de streaming ni montos.
+- **`frontend/src/app/admin/usuarios/page.tsx`** — provisión de cuentas (punto 2 del plan):
+  tabla de usuarios con rol, artista/sello asignado, estado y **estado de invitación
+  derivado en 4 variantes** (sin invitación / pendiente con fecha de expiración / activada /
+  expirada); formulario de provisión que distingue cuenta de Artista o Administrador;
+  generación del **enlace de invitación de un solo uso** copiable al portapapeles; búsqueda
+  por correo; y activación/desactivación de cuentas siempre mediante confirmación.
+- **`frontend/src/app/admin/permisos/page.tsx`** — asignación de accesos (punto 3 del plan):
+  selector de cuenta de artista, botón único para otorgar o revocar **todo el catálogo**
+  (nivel artista), y catálogo agrupado por tipo (álbumes / canciones / videos) expandible
+  para conceder o revocar **de forma individual** cada elemento. Distingue visualmente el
+  permiso explícito (`ALLOW`/`DENY`) del **heredado** del artista o del sello, y muestra el
+  nivel del que hereda cada elemento. Incluye historial de concesiones con quién otorgó cada
+  acceso, cuándo y si sigue vigente o fue revocada.
+- **`frontend/src/app/admin/auditoria/page.tsx`** — vista de auditoría (punto 4 del plan):
+  KPIs de 24 h (logins exitosos, **logins fallidos destacados en rojo**, permisos
+  modificados, usuarios activos), tabla de eventos con badges por tipo de evento resueltos
+  por valor exacto, filtros por evento y rango de fechas aplicados en el servidor, búsqueda
+  de texto en la página actual, paginación y aviso de que el registro es inmutable.
+- **`frontend/src/app/invitacion/page.tsx`** — activación de cuenta (Fase 2 §5.3, extremo
+  del flujo de provisión): el artista define su propia contraseña mediante un enlace de un
+  solo uso. Valida los requisitos en vivo (longitud, letra, número, coincidencia) y maneja
+  explícitamente el caso de enlace expirado o ya utilizado.
+- **`frontend/src/components/ConfirmModal.tsx`** — modal de confirmación reutilizable
+  (punto 5 del plan): usado obligatoriamente antes de revocaciones masivas, desactivación
+  de cuentas y eliminación de sellos. Cierra con Escape o clic fuera y bloquea el cierre
+  mientras la operación está en curso.
+- **`frontend/verificar-compilacion.cjs`** — compila cada página y componente con SWC (el
+  motor real de Next.js) para verificar sintaxis y TSX sin depender de `next build`, cuyos
+  workers fallan en entornos con sandbox de archivos.
+
+#### Otros
+- **`.env.example` del backend** y configuración de Next.js/Tailwind del frontend, si no
+  existían previamente.
+
+### Corregido
+
+- **🔴 Vulnerabilidad de control de acceso en `frontend/src/app/admin/layout.tsx`** — la
+  ruta protegida por rol autorizaba explícitamente a los usuarios **no** administradores
+  (la rama `else` hacía `setAuthorized(true)`). Cualquier usuario autenticado, incluida una
+  cuenta de artista, podía renderizar el panel completo. Ahora la autorización se resuelve
+  contra el backend vía `GET /auth/me`, con tres estados (verificando / autorizado /
+  denegado); un usuario sin rol admin recibe una pantalla de "Acceso restringido" y nunca
+  el panel. La verificación autoritativa es del servidor: la caché en `localStorage` solo
+  evita el parpadeo del spinner.
+- **`frontend/src/app/login/page.tsx`** — redirigía a `/admin` a **cualquier** usuario
+  autenticado, incluidos los artistas, sin comprobar el rol. Ahora solo los
+  administradores van al panel; una cuenta de artista recibe un mensaje claro de que el
+  portal de artistas aún no está disponible, y se limpian sus tokens localmente.
+- **`frontend/src/app/page.tsx`** — misma corrección: la redirección raíz ya no envía a
+  `/admin` a las cuentas sin rol de administrador.
+
+### Cambiado
+
+- **`README.md`** — actualizado al estado real del proyecto: la tabla de fases refleja las
+  fases 2, 3 y 4 completadas; se añadió una sección del **panel de administración** con sus
+  rutas; la estructura del repositorio ahora incluye `frontend/`, la migración de Prisma y
+  el seed; la tabla de stack pasa de "pendiente" a "implementado" en backend, autenticación
+  y rate limiting; y se documenta cómo correr el frontend, la variable
+  `NEXT_PUBLIC_API_URL` y la verificación de compilación vía SWC.
+- **`.gitignore`** — se ignora `.npm-cache/` (caché local de npm de ~246 MB usado cuando el
+  caché global no es escribible).
+
+### Verificación
+
+- `npm test -- --runInBand` en `backend/`: **27 pruebas en 5 suites, todas pasando**
+  (permisos, auth, stats, admin, auditoría). Requiere `--runInBand` porque los workers de
+  Jest fallan con `EPERM` bajo sandbox de archivos.
+- `tsc --noEmit` en `backend/` y en `frontend/`: **sin errores de tipos**.
+- `node verificar-compilacion.cjs` en `frontend/`: **15/15 archivos compilan** con SWC.
+- **Limitación conocida:** `next build` completo no pudo ejecutarse en el entorno de
+  desarrollo usado porque Next levanta workers con stdio por pipe, bloqueado por el sandbox
+  (`spawn EPERM`). La verificación se hizo por tipos (tsc) y compilación real (SWC) de todos
+  los archivos; el build completo queda pendiente de correr en un entorno sin sandbox.
+
+### Pendiente
+
+- **Fase 5** — el portal del artista (pantallas de estadísticas, gráficas y mapa). Es lo
+  único que falta del producto central; hoy `frontend/` contiene solo el panel de
+  administración.
+- **Fase 1** — aplicar las 7 vistas en Azure y validar los totales contra Power BI.
+- **Fase 6** — despliegue en Azure, `fonarte_portal`, Key Vault y CI/CD.
+- Confirmar con el negocio qué plataformas están efectivamente en `fonarte2`.
 
 ---
 
@@ -392,6 +497,9 @@ ORCHARD               — streams Orchard (incluye columnas monetarias)
 - [Código anterior conservado como referencia](./legacy/README.md)
 - [Querys originales Power BI](./Querys%20originales%20power%20Bi)
 
-[Unreleased]: https://github.com/FonarteLatino/FonarteForArtists/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/FonarteLatino/FonarteForArtists/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/FonarteLatino/FonarteForArtists/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/FonarteLatino/FonarteForArtists/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/FonarteLatino/FonarteForArtists/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/FonarteLatino/FonarteForArtists/compare/v0.0.0...v0.1.0
 [0.0.0]: https://github.com/FonarteLatino/FonarteForArtists/releases/tag/v0.0.0

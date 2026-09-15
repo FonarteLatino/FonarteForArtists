@@ -40,17 +40,38 @@ El proyecto está en construcción, siguiendo el
 |---|---|---|
 | **Fase 0** | Auditoría del repositorio anterior | ✅ Completada — [hallazgos](./docs/fase0_hallazgos.md) |
 | **Fase 1** | Capa de datos: vistas SQL sobre `fonarte2` | 🟡 Vistas escritas y versionadas, **pendientes de aplicar y validar** contra Power BI |
-| **Fase 2** | Modelo de permisos y autenticación | 🟡 Esquema Prisma y `PermissionsService` listos y testeados; falta auth/invitaciones |
-| **Fase 3** | API backend (NestJS) | ⚪ No iniciada |
-| **Fase 4** | Panel de administración | ⚪ No iniciada |
-| **Fase 5** | Portal del artista (frontend) | ⚪ No iniciada |
+| **Fase 2** | Modelo de permisos y autenticación | ✅ Esquema Prisma, `PermissionsService`, `AuthModule` (JWT + Argon2id + invitaciones) y auditoría |
+| **Fase 3** | API backend (NestJS) | ✅ `AuthModule`, `PermissionsModule`, `StatsModule`, `AdminModule`, `AuditModule` + 27 tests |
+| **Fase 4** | Panel de administración | ✅ Completada — sellos, artistas/catálogo, usuarios/invitaciones, permisos y auditoría |
+| **Fase 5** | Portal del artista (frontend) | ⚪ No iniciada — solo existe el panel de administración |
 | **Fase 6** | Despliegue en Azure | ⚪ No iniciada |
 
-**Qué existe hoy en código:** el esquema completo de la base de permisos
-(`backend/prisma/schema.prisma`) y la lógica de resolución de permisos con sus pruebas
-unitarias. El resto del backend son directorios vacíos reservados por módulo
-(`auth/`, `stats/`, `admin/`, `audit/`) y todavía **no hay frontend**: el directorio
-`frontend/` no se ha creado.
+**Qué existe hoy en código:** backend NestJS completo (auth con Argon2id y refresh tokens
+rotativos, guards de rol y de permisos, endpoints de estadísticas sin datos monetarios,
+CRUD de administración y auditoría) con **27 pruebas unitarias pasando**, más el panel de
+administración en Next.js descrito abajo. Lo que **falta** es el portal del artista
+(Fase 5), que es distinto del panel: todavía no hay pantallas de estadísticas para el
+artista.
+
+### Panel de administración (Fase 4)
+
+Vive en `frontend/` (Next.js 14 App Router) y cubre los 5 puntos del plan §7:
+
+| Ruta | Qué hace |
+|---|---|
+| `/login` | Inicio de sesión. Sin autoregistro; muestra el aviso de "solicita tu enlace de activación" |
+| `/invitacion?token=…` | Activación de cuenta: el artista define su propia contraseña (validación en vivo). Enlace de un solo uso |
+| `/admin` | Panel general: KPIs (sellos, artistas, usuarios activos, logins 24 h) y actividad reciente |
+| `/admin/sellos` | Alta y baja de sellos (nivel superior de la jerarquía) |
+| `/admin/artistas` | Alta de artistas por sello y registro de su catálogo por **ISRC/UPC** |
+| `/admin/usuarios` | Provisión de cuentas: genera el enlace de invitación de un solo uso, copiable, con expiración. Activar/desactivar cuentas |
+| `/admin/permisos` | **Asignación granular**: catálogo completo del artista, o expandir a álbumes / canciones / videos. Otorgar, denegar y revocar por elemento, con historial de quién otorgó cada acceso |
+| `/admin/auditoria` | Trazabilidad inmutable: logins (exitosos y fallidos), cambios de permisos, con filtros por evento y rango de fechas + paginación |
+
+Toda la ruta `/admin` está **protegida por rol**: un usuario autenticado que no sea
+administrador ve una pantalla de "acceso restringido" y nunca el panel. Cada acción
+sensible (revocar accesos masivos, desactivar cuentas, eliminar sellos) pasa por un modal
+de confirmación explícito.
 
 ---
 
@@ -113,14 +134,37 @@ necesita ver, y el radio de impacto queda contenido.
 
 ```
 .
-├── backend/                     # API NestJS + Prisma  ← el corazón del proyecto nuevo
+├── backend/                     # API NestJS + Prisma
 │   ├── prisma/
 │   │   ├── schema.prisma        # Esquema de «fonarte_portal» (permisos, usuarios, auditoría)
-│   │   └── migrations/          # (pendiente: aún sin migraciones generadas)
+│   │   ├── seed.ts              # Siembra el primer administrador y datos base
+│   │   └── migrations/          # 20260915000000_init_fonarte_portal
 │   ├── src/
-│   │   ├── permissions/         # ✅ PermissionsService + tests (único módulo implementado)
-│   │   ├── auth/  stats/  admin/  audit/   # (directorios reservados, vacíos)
-│   │   └── prisma/              # (pendiente: PrismaService)
+│   │   ├── auth/                # Login, refresh rotativo, invitaciones, guards de rol
+│   │   ├── permissions/         # Resolución de permisos («lo más específico gana») + guard
+│   │   ├── stats/               # Endpoints de solo lectura, sin columnas monetarias
+│   │   ├── admin/               # CRUD de sellos, artistas, catálogo, usuarios y concesiones
+│   │   ├── audit/               # Consulta de logs de acceso y estadísticas
+│   │   ├── prisma/              # PrismaService
+│   │   ├── app.module.ts        # ThrottlerGuard global (rate limiting)
+│   │   └── main.ts              # Swagger en /api/docs
+│   ├── .env.example
+│   └── package.json
+│
+├── frontend/                    # Panel de administración (Next.js 14 App Router)
+│   ├── src/app/
+│   │   ├── login/               # Inicio de sesión
+│   │   ├── invitacion/          # Activación de cuenta por enlace de un solo uso
+│   │   └── admin/               # Ruta protegida por rol
+│   │       ├── page.tsx         #   Panel general (KPIs + actividad reciente)
+│   │       ├── sellos/          #   Alta y baja de sellos
+│   │       ├── artistas/        #   Artistas + registro de catálogo (ISRC/UPC)
+│   │       ├── usuarios/        #   Provisión de cuentas e invitaciones
+│   │       ├── permisos/        #   Asignación granular de accesos
+│   │       └── auditoria/       #   Trazabilidad de accesos y cambios
+│   ├── src/components/          # AdminNavbar, AdminSidebar, ConfirmModal
+│   ├── src/lib/api.ts           # Cliente HTTP con refresh automático de token
+│   ├── verificar-compilacion.cjs# Compila cada página con SWC (útil bajo sandbox)
 │   └── package.json
 │
 ├── sql/                         # Capa de datos, versionada — no se aplica a mano en Azure
@@ -166,16 +210,18 @@ necesita ver, y el radio de impacto queda contenido.
 
 | Capa | Tecnología | Estado |
 |---|---|---|
-| Backend | **Node.js + TypeScript + NestJS 10** | 🟡 parcial |
-| ORM | **Prisma 5** (`@prisma/client`, conector `sqlserver`) | 🟡 esquema listo |
-| Base de datos de permisos | **Azure SQL** — base `fonarte_portal` (separada de `fonarte2`) | ⚪ pendiente de crear |
+| Backend | **Node.js + TypeScript + NestJS 10** | ✅ implementado |
+| ORM | **Prisma 5** (`@prisma/client`, conector `sqlserver`) | ✅ esquema + migración inicial |
+| Base de datos de permisos | **Azure SQL** — base `fonarte_portal` (separada de `fonarte2`) | ⚪ pendiente de crear en Azure |
 | Base de datos fuente | **Azure SQL** `fonarte2` / esquema `Reporteador` — **solo lectura** | ✅ existe |
-| Autenticación | JWT de vida corta + refresh token, **Argon2id** para contraseñas | ⚪ pendiente |
-| Rate limiting | `@nestjs/throttler` en endpoints de auth | ⚪ pendiente |
-| Frontend | **Next.js 14+ (App Router) + TypeScript + Tailwind CSS** | ⚪ pendiente |
-| Gráficas | Recharts o Chart.js | ⚪ pendiente |
+| Autenticación | JWT de vida corta + refresh token rotativo, **Argon2id** | ✅ implementado |
+| Rate limiting | `@nestjs/throttler` con `ThrottlerGuard` global | ✅ implementado |
+| Frontend | **Next.js 14 (App Router) + TypeScript + Tailwind CSS** | ✅ panel de administración |
+| Gráficas | Recharts o Chart.js | ⚪ pendiente (Fase 5) |
 | Secretos | **Azure Key Vault** — nada de `.env` en el repo | ⚪ pendiente |
 | Hosting | Azure App Service o Container Apps + Application Insights | ⚪ pendiente |
+
+Documentación de la API: Swagger se publica en `/api/docs`.
 
 Dependencias del backend ya declaradas en `backend/package.json`:
 `@nestjs/{common,core,config,jwt,passport,platform-express,swagger,throttler}`,
@@ -362,13 +408,38 @@ npm run prisma:studio          # inspeccionar datos
 
 ```bash
 cd backend
-npm test
+npm test -- --runInBand     # 27 tests: permisos, auth, stats, admin, auditoría
 ```
 
-### 6. Frontend
+> `--runInBand` evita que Jest levante workers por pipe. En un entorno con sandbox de
+> archivos los workers fallan con `EPERM`; fuera de sandbox `npm test` funciona igual.
 
-**Todavía no existe.** El directorio `frontend/` se creará en la Fase 5
-(Next.js 14+ con App Router).
+### 6. Frontend (panel de administración)
+
+```bash
+cd frontend
+npm install
+npm run dev        # http://localhost:3000
+```
+
+Crea `frontend/.env.local` si la API no está en el puerto por defecto:
+
+```env
+NEXT_PUBLIC_API_URL="http://localhost:3001"
+```
+
+El backend debe estar corriendo para poder iniciar sesión. Si el caché global de npm no es
+escribible (entornos con sandbox), usa `npm install --cache .npm-cache`.
+
+Verificación de compilación sin `next build` (útil cuando los workers de Next están
+bloqueados por el sandbox):
+
+```bash
+node verificar-compilacion.cjs   # compila cada página con SWC, el motor real de Next
+```
+
+> El portal del artista (Fase 5) todavía no existe. `frontend/` contiene **solo** el panel
+> de administración y las pantallas de login/activación.
 
 ---
 
@@ -419,10 +490,9 @@ para validar totales), `resumen_regalias.sql` (esquema MySQL antiguo, histórico
 1. **Cerrar Fase 1** — aplicar las vistas en Azure y validar los totales contra Power BI.
 2. **Confirmar con el negocio** qué plataformas están realmente en `fonarte2` y si
    `000_Client_Dashboard_Total` está completa y al día.
-3. **Fase 2** — completar `PrismaService`, `AuthModule` (login, refresh, invitaciones
-   Argon2id) y los guards de permisos reutilizables.
-4. **Fase 3** — `StatsModule` (endpoints de solo lectura filtrados por permisos),
-   `AdminModule` y `AuditModule`.
-5. **Fase 4** — panel de administración con la pantalla de asignación de accesos.
-6. **Fase 5** — portal del artista en Next.js, con el mapa geográfico y las gráficas.
-7. **Fase 6** — despliegue en Azure con Key Vault, Application Insights y CI/CD.
+3. **Desplegar el backend y crear `fonarte_portal`** — generar y aplicar la primera
+   migración de Prisma, sembrar el primer administrador con `prisma/seed.ts` y mover los
+   secretos a Key Vault.
+4. **Fase 5** — portal del artista: resumen de streams, desglose por álbum/canción/video,
+   tendencia, plataformas y mapa geográfico. Es lo único que falta del producto central.
+5. **Fase 6** — despliegue en Azure con Key Vault, Application Insights y CI/CD.
